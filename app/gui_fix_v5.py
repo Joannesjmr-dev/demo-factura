@@ -2,7 +2,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import ttkbootstrap as ttkb
+from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.constants import *
+print(dir(ttkb))
 
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
@@ -95,7 +97,7 @@ class InterfazNotas:
         setattr(self, f'codigo_concepto_{tipo_nota}_var', codigo_concepto_var)
         
         # Combobox con conceptos DIAN
-        conceptos = [
+        conceptos_nota_credito = [
             "1 - Devolución parcial de los bienes y/o no aceptación parcial del servicio",
             "2 - Anulación de factura electrónica",
             "3 - Rebaja o descuento parcial o total",
@@ -108,7 +110,7 @@ class InterfazNotas:
         combo_concepto = ttkb.Combobox(
             concepto_frame, 
             textvariable=codigo_concepto_var,
-            values=conceptos,
+            values=conceptos_nota_credito,
             width=40
         )
         combo_concepto.grid(row=0, column=1, padx=(5, 0))
@@ -235,25 +237,27 @@ class InterfazNotas:
         # Treeview para resultados
         self.tree = ttkb.Treeview(
             self.tab_consultas,
-            columns=('numero', 'tipo', 'fecha', 'factura_ref', 'valor_total', 'estado'),
-            show='headings',
+            columns=['numero', 'tipo', 'fecha', 'factura_ref', 'valor_total', 'estado'],
+            show='headings',            
+            bootstyle=PRIMARY,
             height=15
         )
         
-        # Configurar columnas
-        self.tree.heading('numero', text='Número')
-        self.tree.heading('tipo', text='Tipo')
-        self.tree.heading('fecha', text='Fecha')
-        self.tree.heading('factura_ref', text='Factura Ref.')
-        self.tree.heading('valor_total', text='Valor Total')
-        self.tree.heading('estado', text='Estado')
-        
-        self.tree.column('numero', width=100)
-        self.tree.column('tipo', width=100)
-        self.tree.column('fecha', width=100)
-        self.tree.column('factura_ref', width=120)
-        self.tree.column('valor_total', width=100)
-        self.tree.column('estado', width=80)
+        # Configurar encabezados
+        self.tree.heading('numero', text='Número', anchor=CENTER)
+        self.tree.heading('tipo', text='Tipo', anchor=CENTER)
+        self.tree.heading('fecha', text='Fecha', anchor=CENTER)
+        self.tree.heading('factura_ref', text='Factura Ref.', anchor=CENTER)
+        self.tree.heading('valor_total', text='Valor Total', anchor=CENTER)
+        self.tree.heading('estado', text='Estado', anchor=CENTER)
+
+        # Configurar columnas con alineación
+        self.tree.column('numero', width=100, anchor=CENTER)
+        self.tree.column('tipo', width=100, anchor=CENTER)
+        self.tree.column('fecha', width=120, anchor=CENTER)
+        self.tree.column('factura_ref', width=120, anchor=CENTER)
+        self.tree.column('valor_total', width=120, anchor=E)  # Números a la derecha
+        self.tree.column('estado', width=100, anchor=CENTER)
         
         self.tree.pack(fill=BOTH, expand=True, pady=(0, 10))
         
