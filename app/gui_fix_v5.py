@@ -4,7 +4,7 @@ from tkinter import ttk, messagebox, filedialog
 import ttkbootstrap as ttkb
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.constants import *
-print(dir(ttkb))
+# print(dir(ttkb))
 
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
@@ -71,22 +71,22 @@ class InterfazNotas:
         datos_frame.pack(fill=X, pady=(0, 10))
         
         # Número de nota
-        ttkb.Label(datos_frame, text="Número:").grid(row=0, column=0, sticky=W, padx=(0, 5))
+        ttkb.Label(datos_frame, text="Número:").grid(row=0, column=0, sticky=W, padx=(0, 20))
         numero_var = tk.StringVar()
         setattr(self, f'numero_{tipo_nota}_var', numero_var)
-        ttkb.Entry(datos_frame, textvariable=numero_var, width=20).grid(row=0, column=1, padx=(0, 20))
+        ttkb.Entry(datos_frame, textvariable=numero_var, width=20).grid(row=1, column=0, padx=(5, 20))
         
         # Fecha (usar datetime ya importado globalmente)
-        ttkb.Label(datos_frame, text="Fecha:").grid(row=0, column=2, sticky=W, padx=(0, 5))
+        ttkb.Label(datos_frame, text="Fecha:").grid(row=0, column=1, sticky=W, padx=(0, 20))
         fecha_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         setattr(self, f'fecha_{tipo_nota}_var', fecha_var)
-        ttkb.Entry(datos_frame, textvariable=fecha_var, width=15).grid(row=0, column=3)
+        ttkb.Entry(datos_frame, textvariable=fecha_var, width=15).grid(row=1, column=1, padx=(5, 20))
         
         # Factura referencia
-        ttkb.Label(datos_frame, text="Factura Referencia:").grid(row=1, column=0, sticky=W, padx=(0, 5))
+        ttkb.Label(datos_frame, text="Factura Referencia:").grid(row=0, column=2, sticky=W, padx=(0, 20))
         factura_ref_var = tk.StringVar()
         setattr(self, f'factura_ref_{tipo_nota}_var', factura_ref_var)
-        ttkb.Entry(datos_frame, textvariable=factura_ref_var, width=20).grid(row=1, column=1, pady=(5, 0))
+        ttkb.Entry(datos_frame, textvariable=factura_ref_var, width=20).grid(row=1, column=2, padx=(5, 20))
         
         # Concepto
         concepto_frame = ttkb.LabelFrame(parent, text="Concepto", padding=10)
