@@ -92,27 +92,33 @@ class InterfazNotas:
         setattr(self, f'factura_ref_{tipo_nota}_var', factura_ref_var)
         ttkb.Entry(Referencias_documento_frame, textvariable=factura_ref_var, width=20).grid(row=1, column=0, padx=(5, 20))
 
+        # Fecha de Emisión
+        ttkb.Label(Referencias_documento_frame, text="Fecha de Emisión:").grid(row=0, column=1, sticky=W, padx=(0, 20))
+        fecha_emision_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+        setattr(self, f'fecha_emision_{tipo_nota}_var', fecha_emision_var)
+        ttkb.Entry(Referencias_documento_frame, textvariable=fecha_emision_var, width=15).grid(row=1, column=1, padx=(5, 20))
+
         # Nit del Emisor
-        ttkb.Label(Referencias_documento_frame, text="Nit del Emisor:").grid(row=0, column=1, sticky=W, padx=(0, 20))
+        ttkb.Label(Referencias_documento_frame, text="Nit del Emisor:").grid(row=0, column=2, sticky=W, padx=(0, 20))
         nit_emisor_var = tk.StringVar()
         setattr(self, f'nit_emisor_{tipo_nota}_var', nit_emisor_var)
-        ttkb.Entry(Referencias_documento_frame, textvariable=nit_emisor_var, width=20).grid(row=1, column=1, padx=(5, 20))
+        ttkb.Entry(Referencias_documento_frame, textvariable=nit_emisor_var, width=20).grid(row=1, column=2, padx=(5, 20))
 
         # Razón Social del Emisor
         ttkb.Label(Referencias_documento_frame, text="Razón Social del Emisor:").grid(
-            row=0, column=2, sticky=W, padx=(0, 20)
+            row=0, column=3, sticky=W, padx=(0, 20)
         )
         raz_soc_emisor_var = tk.StringVar()
         setattr(self, f'raz_soc_emisor_{tipo_nota}_var', raz_soc_emisor_var)
-        ttkb.Entry(Referencias_documento_frame, textvariable=raz_soc_emisor_var, width=40).grid(row=1, column=2, padx=(5, 20))
+        ttkb.Entry(Referencias_documento_frame, textvariable=raz_soc_emisor_var, width=40).grid(row=1, column=3, padx=(5, 20))
 
         #Total Bruto Factura
         ttkb.Label(Referencias_documento_frame, text="Total Bruto Factura:").grid(
-            row=0, column=3, sticky=W, padx=(0, 20)
+            row=0, column=4, sticky=W, padx=(0, 20)
         )
         total_bruto_var = tk.StringVar(value="0.00")
         setattr(self, f'total_bruto_{tipo_nota}_var', total_bruto_var)
-        ttkb.Entry(Referencias_documento_frame, textvariable=total_bruto_var, width=15).grid(row=1, column=3, padx=(5, 20))
+        ttkb.Entry(Referencias_documento_frame, textvariable=total_bruto_var, width=15).grid(row=1, column=4, padx=(5, 20))
 
         # Concepto
         concepto_frame = ttkb.LabelFrame(parent, text="Concepto", padding=10)
@@ -322,7 +328,12 @@ class InterfazNotas:
             cufe VARCHAR(200),
             xml_content LONGTEXT,
             estado ENUM('borrador', 'generado', 'enviado') DEFAULT 'borrador',
-            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            numero_factura_ref VARCHAR(50),
+            fecha_emision_ref DATE,
+            nit_emisor_ref VARCHAR(50),
+            razon_social_ref VARCHAR(255),
+            total_bruto_factura_ref DECIMAL(15,2)
         )
         """
 
@@ -363,8 +374,15 @@ class InterfazNotas:
         except (ValueError, Exception) as e:
             logger.error(f"Error calculando valores: {e}")
 
-    def generar_nota(self, tipo_nota):
-        """Generar nota crédito o débito"""
+        def generar_nota(self, tipo_nota):
+            """
+            Genera una nota crédito o débito, recopilando los datos del formulario,
+            validándolos, generando el CUFE y guardando la información en la base de datos.
+
+            :param tipo_nota: El tipo de nota a generar ('credito' o 'debito').
+            :type tipo_nota: str
+            :raises Exception: Si ocurre un error durante el proceso de generación o guardado de la nota.
+            """
         try:
             # Obtener la fecha y hora actual usando datetime ya importado
             ahora = datetime.now()
