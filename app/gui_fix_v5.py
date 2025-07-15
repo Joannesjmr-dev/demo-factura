@@ -120,8 +120,8 @@ class InterfazNotas:
         setattr(self, f'total_bruto_{tipo_nota}_var', total_bruto_var)
         ttkb.Entry(Referencias_documento_frame, textvariable=total_bruto_var, width=15).grid(row=1, column=4, padx=(5, 20))
 
-        # Concepto
-        concepto_frame = ttkb.LabelFrame(parent, text="Concepto", padding=10)
+        # Concepto De Corrección
+        concepto_frame = ttkb.LabelFrame(parent, text="Concepto De Corrección", padding=10)
         concepto_frame.pack(fill=X, pady=(0, 10))
 
         ttkb.Label(concepto_frame, text="Código Concepto:").grid(row=0, column=0, sticky=W)
