@@ -176,13 +176,13 @@ class InterfazNotas:
             command=self.on_generar_nota,
             row=0, column=0
         )
-        self.crear_boton(
-            botones_frame,
+        self.boton_limpiar = ttkb.Button(
+            parent,
             text="Limpiar",
             bootstyle=SECONDARY,
-            command=self.limpiar_formulario,
-            row=0, column=1
-        )
+            command=lambda t=tipo_nota: self.limpiar_formulario(t),
+            )
+        self.boton_limpiar.pack(side=tk.RIGHT, padx=(0, 10), pady=(10, 0))
         self.crear_boton(
             botones_frame,
             text="Exportar XML",
@@ -215,9 +215,26 @@ class InterfazNotas:
         self.crear_scrollbar_vertical(self.tab_consultas, self.tree)
 
     # Métodos stub para limpiar formulario y exportar XML
-    def limpiar_formulario(self):
-        # Implementa la lógica de limpiar los campos del formulario
-        pass
+    def limpiar_formulario(self, tipo_nota=None):
+        if tipo_nota is None:
+            tipo_nota = self.notebook.tab(self.notebook.select(), "text").lower().replace(' ', '_').replace('nota_', '')
+        # Limpiar campos principales
+        self.numero_var.set("")
+        # Limpiar referencias del documento
+        self.factura_ref_vars[tipo_nota].set("")
+        self.fecha_emision_vars[tipo_nota].set(datetime.now().strftime('%Y-%m-%d'))
+        self.nit_emisor_vars[tipo_nota].set("")
+        self.raz_soc_emisor_vars[tipo_nota].set("")
+        self.total_bruto_vars[tipo_nota].set("0.00")
+        # Limpiar otros campos si lo deseas
+        self.codigo_concepto_var.set("")
+        self.descripcion_text.delete('1.0', 'end')
+        self.valor_base_var.set("0.00")
+        self.iva_var.set("0.00")
+        self.valor_iva_var.set("0.00")
+        self.porcentaje_retencion_var.set("0.00")
+        self.retencion_renta_var.set("0.00")
+        self.total_var.set("0.00")
 
     def exportar_xml(self):
         # Implementa la lógica de exportar XML
@@ -265,13 +282,15 @@ class InterfazNotas:
             ))
 
     def obtener_datos_formulario(self):
-        # Devuelve un dict con los datos del formulario
-        # Debes adaptar esto a tus widgets reales
+        tipo_nota = self.notebook.tab(self.notebook.select(), "text").lower().replace(' ', '_').replace('nota_', '')
         return {
-            "tipo_nota": self.tipo_nota_var.get(),
+            "tipo_nota": tipo_nota,
             "numero": self.numero_var.get(),
-            "fecha_emision": self.fecha_var.get(),
-            "factura_referencia": self.factura_ref_vars[self.tipo_nota_var.get()].get(),
+            "fecha_emision": self.fecha_emision_vars[tipo_nota].get(),
+            "factura_referencia": self.factura_ref_vars[tipo_nota].get(),
+            "nit_emisor": self.nit_emisor_vars[tipo_nota].get(),
+            "razon_social_emisor": self.raz_soc_emisor_vars[tipo_nota].get(),
+            "total_bruto": self.total_bruto_vars[tipo_nota].get(),
             "codigo_concepto": self.codigo_concepto_var.get(),
             "descripcion_concepto": self.descripcion_text.get('1.0', 'end').strip(),
             "valor_base": self.valor_base_var.get(),
