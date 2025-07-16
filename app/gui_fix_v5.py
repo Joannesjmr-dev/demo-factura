@@ -176,7 +176,7 @@ class InterfazNotas:
 
         descripcion_var = tk.StringVar()
         setattr(self, f'descripcion_{tipo_nota}_var', descripcion_var)
-        descripcion_text = self.crear_text_multilinea(concepto_frame, "Descripción:", 1, 0, width=50, height=3)
+        descripcion_text = self.crear_text_multilinea(concepto_frame, "Descripción:", 2, 0, width=50, height=3)
         setattr(self, f'descripcion_{tipo_nota}_text', descripcion_text)
 
         # Valores
@@ -189,25 +189,25 @@ class InterfazNotas:
 
         iva_var = tk.StringVar(value="0.00")
         setattr(self, f'iva_{tipo_nota}_var', iva_var)
-        entry_iva = self.crear_entry(valores_frame, "% IVA:", iva_var, 0, 2, width=10)
+        entry_iva = self.crear_entry(valores_frame, "% IVA:", iva_var, 2, 0, width=10)
         entry_iva.bind('<KeyRelease>', lambda e: self.calcular_valores(tipo_nota))
 
         valor_iva_var = tk.StringVar(value="0.00")
         setattr(self, f'valor_iva_{tipo_nota}_var', valor_iva_var)
-        self.crear_entry_readonly(valores_frame, "Valor IVA:", valor_iva_var, 1, 0, width=15)
+        self.crear_entry_readonly(valores_frame, "Valor IVA:", valor_iva_var, 4, 0, width=15)
 
         porcentaje_retencion_var = tk.StringVar(value="0.00")
         setattr(self, f'porcentaje_retencion_{tipo_nota}_var', porcentaje_retencion_var)
-        entry_porcentaje_retencion = self.crear_entry(valores_frame, "% Retención Renta:", porcentaje_retencion_var, 2, 0, width=10)
+        entry_porcentaje_retencion = self.crear_entry(valores_frame, "% Retención Renta:", porcentaje_retencion_var, 6, 0, width=10)
         entry_porcentaje_retencion.bind('<KeyRelease>', lambda e: self.calcular_valores(tipo_nota))
 
         valor_retencion_var = tk.StringVar(value="0.00")
         setattr(self, f'retencion_renta_{tipo_nota}_var', valor_retencion_var)
-        self.crear_entry_readonly(valores_frame, "Valor Retención Renta:", valor_retencion_var, 2, 2, width=15)
+        self.crear_entry_readonly(valores_frame, "Valor Retención Renta:", valor_retencion_var, 8, 0, width=15)
 
         total_var = tk.StringVar(value="0.00")
         setattr(self, f'total_{tipo_nota}_var', total_var)
-        self.crear_entry_readonly(valores_frame, "Total:", total_var, 1, 2, width=15)
+        self.crear_entry_readonly(valores_frame, "Total:", total_var, 10, 0, width=15)
 
         # Botones
         botones_frame = ttkb.Frame(parent)
