@@ -3,10 +3,12 @@ from tkinter import messagebox
 import ttkbootstrap as ttkb
 from ttkbootstrap.constants import *
 from datetime import datetime
+from typing import Optional
+from app.controllers.notas_controller import NotasController
 
 class InterfazNotas:
-    def __init__(self, controller):
-        self.controller = controller
+    def __init__(self, controller: Optional[NotasController] = None):
+        self.controller: Optional[NotasController] = controller
         self.root = ttkb.Window(themename="litera")
         self.root.title("Módulo Notas Crédito y Débito - DIAN")
         self.root.geometry("1200x800")
@@ -42,33 +44,33 @@ class InterfazNotas:
         self.setup_consultas_tab()
 
     # Métodos de creación de widgets (copiados/adaptados de gui_fix_v5.py)
-    def crear_boton(self, parent, text, command, bootstyle=PRIMARY, side=LEFT, padx=(0, 10)):
+    def crear_boton(self, parent, text, command, bootstyle=PRIMARY, row=0, column=0, padx=(0, 10)):
         btn = ttkb.Button(parent, text=text, bootstyle=bootstyle, command=command)
-        btn.pack(side=side, padx=padx)
+        btn.grid(row=row, column=column, padx=padx)
         return btn
 
-    def crear_entry(self, parent, label, var, row, column, width=15):
-        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W, pady=(5, 0))
+    def crear_entry(self, parent, label, var, row, column, width=15, pady=(0, 10)):
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W, pady=(0, 2))
         entry = ttkb.Entry(parent, textvariable=var, width=width)
-        entry.grid(row=row, column=column+1, padx=(5, 20), pady=(5, 0))
+        entry.grid(row=row+1, column=column, padx=(5, 20), pady=pady, sticky=tk.EW)
         return entry
 
     def crear_entry_readonly(self, parent, label, var, row, column, width=15):
         ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W, pady=(5, 0))
         entry = ttkb.Entry(parent, textvariable=var, width=width, state=READONLY)
-        entry.grid(row=row, column=column+1, padx=(5, 20), pady=(5, 0))
+        entry.grid(row=row+1, column=column, padx=(5, 20), pady=(5, 0))
         return entry
 
     def crear_combobox(self, parent, label, var, values, row, column, width=40):
         ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W)
         combo = ttkb.Combobox(parent, textvariable=var, values=values, width=width)
-        combo.grid(row=row, column=column+1, padx=(5, 0))
+        combo.grid(row=row+1, column=column, padx=(5, 0))
         return combo
 
-    def crear_text_multilinea(self, parent, label, row, column, width=50, height=3):
-        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.NW, pady=(5, 0))
+    def crear_text_multilinea(self, parent, label, row, column, width=50, height=3, pady=(0, 10)):
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.NW, pady=(0, 2))
         text_widget = tk.Text(parent, height=height, width=width)
-        text_widget.grid(row=row, column=column+1, padx=(5, 0), pady=(5, 0))
+        text_widget.grid(row=row+1, column=column, padx=(5, 0), pady=pady, sticky=tk.EW)
         return text_widget
 
     def crear_labelframe(self, parent, text, padding=10):
@@ -77,15 +79,33 @@ class InterfazNotas:
         return frame
 
     def setup_nota_tab(self, parent, tipo_nota):
-        datos_frame = self.crear_labelframe(parent, "Datos Básicos")
+        # Crear canvas y scrollbar para scroll vertical
+        canvas = tk.Canvas(parent)
+        scrollbar = ttkb.Scrollbar(parent, orient=tk.VERTICAL, command=canvas.yview)
+        scrollable_frame = ttkb.Frame(canvas)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Ahora, usa scrollable_frame como parent para el contenido del formulario
+        datos_frame = self.crear_labelframe(scrollable_frame, "Datos Básicos")
         self.numero_var = tk.StringVar()
         self.crear_entry(datos_frame, "Número:", self.numero_var, 0, 0, width=20)
         self.fecha_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(datos_frame, "Fecha:", self.fecha_var, 0, 1, width=15)
 
-        referencias_frame = self.crear_labelframe(parent, "Referencias del documento")
+        referencias_frame = self.crear_labelframe(scrollable_frame, "Referencias del documento")
         self.factura_ref_var = tk.StringVar()
-        self.crear_entry(referencias_frame, "Factura Referencia:", self.factura_ref_var, 0, 0, width=20)
+        entry_factura_ref = self.crear_entry(referencias_frame, "Factura Referencia:", self.factura_ref_var, 0, 0, width=20)
+        entry_factura_ref.bind('<FocusOut>', self.on_factura_ref_change)
+        entry_factura_ref.bind('<Return>', self.on_factura_ref_change)
         self.fecha_emision_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(referencias_frame, "Fecha de Emisión:", self.fecha_emision_var, 0, 1, width=15)
         self.nit_emisor_var = tk.StringVar()
@@ -95,7 +115,7 @@ class InterfazNotas:
         self.total_bruto_var = tk.StringVar(value="0.00")
         self.crear_entry(referencias_frame, "Total Bruto Factura:", self.total_bruto_var, 0, 4, width=15)
 
-        concepto_frame = self.crear_labelframe(parent, "Concepto De Corrección")
+        concepto_frame = self.crear_labelframe(scrollable_frame, "Concepto De Corrección")
         self.codigo_concepto_var = tk.StringVar()
         conceptos_nota_credito = [
             "1 - Devolución parcial de los bienes y/o no aceptación parcial del servicio",
@@ -107,21 +127,26 @@ class InterfazNotas:
             "7 - Otros"
         ]
         self.crear_combobox(concepto_frame, "Código Concepto:", self.codigo_concepto_var, conceptos_nota_credito, 0, 0, width=40)
-        self.descripcion_text = self.crear_text_multilinea(concepto_frame, "Descripción:", 1, 0, width=50, height=3)
+        self.descripcion_text = self.crear_text_multilinea(concepto_frame, "Descripción:", 2, 0, width=50, height=3)
 
-        valores_frame = self.crear_labelframe(parent, "Valores")
+        valores_frame = self.crear_labelframe(scrollable_frame, "Valores")
+        valores_frame.grid_columnconfigure(0, weight=1)
+
+        row = 0
         self.valor_base_var = tk.StringVar(value="0.00")
-        entry_base = self.crear_entry(valores_frame, "Valor Base:", self.valor_base_var, 0, 0, width=15)
+        entry_base = self.crear_entry(valores_frame, "Valor Base:", self.valor_base_var, row, 0)
+        row += 2
         self.iva_var = tk.StringVar(value="0.00")
-        entry_iva = self.crear_entry(valores_frame, "% IVA:", self.iva_var, 0, 2, width=10)
+        entry_iva = self.crear_entry(valores_frame, "% IVA:", self.iva_var, row, 0)
+        row += 2
         self.valor_iva_var = tk.StringVar(value="0.00")
-        self.crear_entry_readonly(valores_frame, "Valor IVA:", self.valor_iva_var, 1, 0, width=15)
+        self.crear_entry_readonly(valores_frame, "Valor IVA:", self.valor_iva_var, row, 0)
         self.porcentaje_retencion_var = tk.StringVar(value="0.00")
-        entry_porcentaje_retencion = self.crear_entry(valores_frame, "% Retención Renta:", self.porcentaje_retencion_var, 2, 0, width=10)
+        entry_porcentaje_retencion = self.crear_entry(valores_frame, "% Retención Renta:", self.porcentaje_retencion_var, 6, 0, width=10)
         self.retencion_renta_var = tk.StringVar(value="0.00")
-        self.crear_entry_readonly(valores_frame, "Valor Retención Renta:", self.retencion_renta_var, 2, 2, width=15)
+        self.crear_entry_readonly(valores_frame, "Valor Retención Renta:", self.retencion_renta_var, 8, 0, width=15)
         self.total_var = tk.StringVar(value="0.00")
-        self.crear_entry_readonly(valores_frame, "Total:", self.total_var, 1, 2, width=15)
+        self.crear_entry_readonly(valores_frame, "Total:", self.total_var, 10, 0, width=15)
 
         # Enlazar eventos de cálculo
         entry_base.bind('<KeyRelease>', lambda e: self.calcular_valores())
@@ -129,26 +154,28 @@ class InterfazNotas:
         entry_porcentaje_retencion.bind('<KeyRelease>', lambda e: self.calcular_valores())
 
         # Botones
-        botones_frame = ttkb.Frame(parent)
+        botones_frame = ttkb.Frame(scrollable_frame)
         botones_frame.pack(fill=tk.X, pady=10)
         self.crear_boton(
             botones_frame,
             text=f"Generar Nota {'Crédito' if tipo_nota == 'credito' else 'Débito'}",
             bootstyle=SUCCESS,
-            command=self.on_generar_nota
+            command=self.on_generar_nota,
+            row=0, column=0
         )
         self.crear_boton(
             botones_frame,
             text="Limpiar",
             bootstyle=SECONDARY,
-            command=self.limpiar_formulario
+            command=self.limpiar_formulario,
+            row=0, column=1
         )
         self.crear_boton(
             botones_frame,
             text="Exportar XML",
             bootstyle=INFO,
             command=self.exportar_xml,
-            padx=(0, 0)
+            row=0, column=2, padx=(0, 0)
         )
 
     def setup_consultas_tab(self):
@@ -159,7 +186,7 @@ class InterfazNotas:
         self.crear_entry(filtros_frame, "Desde:", self.fecha_desde_var, 0, 2, width=12)
         self.fecha_hasta_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(filtros_frame, "Hasta:", self.fecha_hasta_var, 0, 4, width=12)
-        self.crear_boton(filtros_frame, "Buscar", self.buscar_notas, bootstyle=PRIMARY, side=LEFT, padx=(0, 0))
+        self.crear_boton(filtros_frame, "Buscar", self.buscar_notas, bootstyle=PRIMARY, row=0, column=6, padx=(0, 0))
         columns = ['numero', 'tipo', 'fecha', 'factura_ref', 'valor_total', 'estado']
         headings = ['Número', 'Tipo', 'Fecha', 'Factura Ref.', 'Valor Total', 'Estado']
         column_widths = [100, 100, 120, 120, 120, 100]
@@ -199,11 +226,13 @@ class InterfazNotas:
 
     def on_generar_nota(self):
         datos_formulario = self.obtener_datos_formulario()
-        self.controller.generar_nota(datos_formulario)
+        if self.controller is not None:
+            self.controller.generar_nota(datos_formulario)
 
     def buscar_notas(self):
         filtros = self.obtener_filtros_consulta()
-        self.controller.consultar_notas(filtros)
+        if self.controller is not None:
+            self.controller.consultar_notas(filtros)
 
     def mostrar_mensaje(self, mensaje):
         messagebox.showinfo("Información", mensaje)
@@ -246,4 +275,38 @@ class InterfazNotas:
             "tipo": self.tipo_consulta_var.get(),
             "fecha_desde": self.fecha_desde_var.get(),
             "fecha_hasta": self.fecha_hasta_var.get(),
-        } 
+        }
+
+    def crear_tabla_resultados(self, parent, columns, headings, column_widths, anchor_map, height=15):
+        tree = ttkb.Treeview(
+            parent,
+            columns=columns,
+            show='headings',
+            height=height
+        )
+        for col, head, width, anchor in zip(columns, headings, column_widths, anchor_map):
+            tree.heading(col, text=head, anchor=anchor)
+            tree.column(col, width=width, anchor=anchor)
+        tree.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        return tree
+
+    def crear_scrollbar_vertical(self, parent, widget, side=tk.RIGHT):
+        scrollbar = ttkb.Scrollbar(parent, orient=tk.VERTICAL, command=widget.yview)
+        widget.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=side, fill=tk.Y)
+        return scrollbar 
+
+    def on_factura_ref_change(self, event=None):
+        if not self.controller:
+            return
+        numero = self.factura_ref_var.get().strip()
+        if not numero:
+            return
+        datos_factura = dict(self.controller.buscar_factura_por_numero(numero))
+        if datos_factura:
+            self.fecha_emision_var.set(str(datos_factura.get('fecha_emision', '')))
+            self.nit_emisor_var.set(str(datos_factura.get('numero_documento', '')))
+            self.raz_soc_emisor_var.set(str(datos_factura.get('razon_social', '')))
+            self.total_bruto_var.set(str(datos_factura.get('total_factura', '0.00')))
+        else:
+            self.mostrar_mensaje('Factura no encontrada') 
