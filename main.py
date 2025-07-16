@@ -1,5 +1,7 @@
 from app.views.notas_view import InterfazNotas
 from app.controllers.notas_controller import NotasController
+import tkinter as tk
+import ttkbootstrap as ttkb
 
 
 def main():
@@ -12,6 +14,7 @@ def main():
         view.controller = controller
     # Lanza la UI principal (Tkinter root o método run)
     if hasattr(view, 'root') and hasattr(view.root, 'mainloop'):
+        view.root.grid_columnconfigure(0, weight=1)
         view.root.mainloop()
     elif hasattr(view, 'run'):
         view.run()
