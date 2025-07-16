@@ -15,6 +15,12 @@ class InterfazNotas:
         self.setup_ui()
 
     def setup_ui(self):
+        self.factura_ref_vars = {}
+        self.entry_factura_refs = {}
+        self.fecha_emision_vars = {}
+        self.nit_emisor_vars = {}
+        self.raz_soc_emisor_vars = {}
+        self.total_bruto_vars = {}
         main_frame = ttkb.Frame(self.root, padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -79,6 +85,7 @@ class InterfazNotas:
         return frame
 
     def setup_nota_tab(self, parent, tipo_nota):
+        print(f"Creando widgets en pestaña: {tipo_nota}")
         # Crear canvas y scrollbar para scroll vertical
         canvas = tk.Canvas(parent)
         scrollbar = ttkb.Scrollbar(parent, orient=tk.VERTICAL, command=canvas.yview)
@@ -102,18 +109,24 @@ class InterfazNotas:
         self.crear_entry(datos_frame, "Fecha:", self.fecha_var, 0, 1, width=15)
 
         referencias_frame = self.crear_labelframe(scrollable_frame, "Referencias del documento")
-        self.factura_ref_var = tk.StringVar()
-        entry_factura_ref = self.crear_entry(referencias_frame, "Factura Referencia:", self.factura_ref_var, 0, 0, width=20)
-        entry_factura_ref.bind('<FocusOut>', self.on_factura_ref_change)
-        entry_factura_ref.bind('<Return>', self.on_factura_ref_change)
-        self.fecha_emision_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
-        self.crear_entry(referencias_frame, "Fecha de Emisión:", self.fecha_emision_var, 0, 1, width=15)
-        self.nit_emisor_var = tk.StringVar()
-        self.crear_entry(referencias_frame, "Nit del Emisor:", self.nit_emisor_var, 0, 2, width=20)
-        self.raz_soc_emisor_var = tk.StringVar()
-        self.crear_entry(referencias_frame, "Razón Social del Emisor:", self.raz_soc_emisor_var, 0, 3, width=40)
-        self.total_bruto_var = tk.StringVar(value="0.00")
-        self.crear_entry(referencias_frame, "Total Bruto Factura:", self.total_bruto_var, 0, 4, width=15)
+        self.factura_ref_vars[tipo_nota] = tk.StringVar()
+        self.entry_factura_refs[tipo_nota] = self.crear_entry(referencias_frame, "Factura Referencia:", self.factura_ref_vars[tipo_nota], 0, 0, width=20)
+        self.entry_factura_refs[tipo_nota].bind('<FocusOut>', lambda e, t=tipo_nota: self.root.after(500, lambda: self.on_factura_ref_change(t)))
+        self.entry_factura_refs[tipo_nota].bind('<Return>', lambda e, t=tipo_nota: self.on_factura_ref_change(t))
+        self.boton_buscar_factura = ttkb.Button(
+            referencias_frame,
+            text="Buscar",
+            command=lambda t=tipo_nota: self.on_factura_ref_change(t)
+        )
+        self.boton_buscar_factura.grid(row=0, column=2, padx=(5, 0))
+        self.fecha_emision_vars[tipo_nota] = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+        self.crear_entry(referencias_frame, "Fecha de Emisión:", self.fecha_emision_vars[tipo_nota], 0, 1, width=15)
+        self.nit_emisor_vars[tipo_nota] = tk.StringVar()
+        self.crear_entry(referencias_frame, "Nit del Emisor:", self.nit_emisor_vars[tipo_nota], 0, 2, width=20)
+        self.raz_soc_emisor_vars[tipo_nota] = tk.StringVar()
+        self.crear_entry(referencias_frame, "Razón Social del Emisor:", self.raz_soc_emisor_vars[tipo_nota], 0, 3, width=40)
+        self.total_bruto_vars[tipo_nota] = tk.StringVar(value="0.00")
+        self.crear_entry(referencias_frame, "Total Bruto Factura:", self.total_bruto_vars[tipo_nota], 0, 4, width=15)
 
         concepto_frame = self.crear_labelframe(scrollable_frame, "Concepto De Corrección")
         self.codigo_concepto_var = tk.StringVar()
@@ -258,7 +271,7 @@ class InterfazNotas:
             "tipo_nota": self.tipo_nota_var.get(),
             "numero": self.numero_var.get(),
             "fecha_emision": self.fecha_var.get(),
-            "factura_referencia": self.factura_ref_var.get(),
+            "factura_referencia": self.factura_ref_vars[self.tipo_nota_var.get()].get(),
             "codigo_concepto": self.codigo_concepto_var.get(),
             "descripcion_concepto": self.descripcion_text.get('1.0', 'end').strip(),
             "valor_base": self.valor_base_var.get(),
@@ -296,17 +309,23 @@ class InterfazNotas:
         scrollbar.pack(side=side, fill=tk.Y)
         return scrollbar 
 
-    def on_factura_ref_change(self, event=None):
-        if not self.controller:
-            return
-        numero = self.factura_ref_var.get().strip()
-        if not numero:
-            return
-        datos_factura = dict(self.controller.buscar_factura_por_numero(numero))
-        if datos_factura:
-            self.fecha_emision_var.set(str(datos_factura.get('fecha_emision', '')))
-            self.nit_emisor_var.set(str(datos_factura.get('numero_documento', '')))
-            self.raz_soc_emisor_var.set(str(datos_factura.get('razon_social', '')))
-            self.total_bruto_var.set(str(datos_factura.get('total_factura', '0.00')))
+    def on_factura_ref_change(self, tipo_nota):
+        entry = self.entry_factura_refs[tipo_nota]
+        var = self.factura_ref_vars[tipo_nota]
+        var.set(entry.get())
+        numero = var.get().strip()
+        resultado = self.controller.buscar_factura_por_numero(numero)
+        if resultado:
+            if not isinstance(resultado, dict):
+                campos = [
+                    'id', 'numero_documento', 'razon_social', 'numero_factura', 'subtotal_factura', 'iva', 'ic', 'inc', 'ica', 'rete_fuente',
+                    'fecha_recepcion', 'fecha_emision', 'fecha_vencimiento', 'total_retenciones', 'total_factura', 'tipo_cliente',
+                    'periodo_factura', 'notas_finales', 'created_at', 'updated_at'
+                ]
+                resultado = dict(zip(campos, resultado))
+            self.fecha_emision_vars[tipo_nota].set(str(resultado.get('fecha_emision', '')))
+            self.nit_emisor_vars[tipo_nota].set(str(resultado.get('numero_documento', '')))
+            self.raz_soc_emisor_vars[tipo_nota].set(str(resultado.get('razon_social', '')))
+            self.total_bruto_vars[tipo_nota].set(str(resultado.get('total_factura', '0.00')))
         else:
             self.mostrar_mensaje('Factura no encontrada') 
