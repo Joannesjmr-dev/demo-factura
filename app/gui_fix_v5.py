@@ -233,70 +233,94 @@ class InterfazNotas:
             padx=(0, 0)
         )
 
+    def crear_filtro_combobox(self, parent, label, var, values, row, column, width=15):
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W)
+        combo = ttkb.Combobox(parent, textvariable=var, values=values, width=width)
+        combo.grid(row=row, column=column+1, padx=(5, 20))
+        return combo
+
+    def crear_filtro_entry(self, parent, label, var, row, column, width=12):
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W)
+        entry = ttkb.Entry(parent, textvariable=var, width=width)
+        entry.grid(row=row, column=column+1, padx=(5, 10))
+        return entry
+
+    def crear_filtro_boton(self, parent, text, command, row, column):
+        btn = ttkb.Button(parent, text=text, bootstyle=PRIMARY, command=command)
+        btn.grid(row=row, column=column)
+        return btn
+
+    def crear_tabla_resultados(self, parent, columns, headings, column_widths, anchor_map, height=15):
+        tree = ttkb.Treeview(
+            parent,
+            columns=columns,
+            show='headings',
+            bootstyle=PRIMARY,
+            height=height
+        )
+        for col, head, width, anchor in zip(columns, headings, column_widths, anchor_map):
+            tree.heading(col, text=head, anchor=anchor)
+            tree.column(col, width=width, anchor=anchor)
+        tree.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        return tree
+
     def setup_consultas_tab(self):
         """Configurar pestaña de consultas"""
         # Frame de filtros
-        filtros_frame = ttkb.LabelFrame(self.tab_consultas, text="Filtros", padding=10)
-        filtros_frame.pack(fill=X, pady=(0, 10))
+        filtros_frame = self.crear_labelframe(self.tab_consultas, "Filtros")
 
         # Tipo de documento
-        ttkb.Label(filtros_frame, text="Tipo:").grid(row=0, column=0, sticky=W)
         self.tipo_consulta_var = tk.StringVar(value="Todos")
-        ttkb.Combobox(
+        self.crear_filtro_combobox(
             filtros_frame,
-            textvariable=self.tipo_consulta_var,
+            label="Tipo:",
+            var=self.tipo_consulta_var,
             values=["Todos", "Nota Crédito", "Nota Débito"],
-            width=15
-        ).grid(row=0, column=1, padx=(5, 20))
+            row=0, column=0, width=15
+        )
 
-        # Fechas (usar datetime ya importado globalmente)
-        ttkb.Label(filtros_frame, text="Desde:").grid(row=0, column=2, sticky=W)
+        # Fechas
         self.fecha_desde_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
-        ttkb.Entry(filtros_frame, textvariable=self.fecha_desde_var, width=12).grid(row=0, column=3, padx=(5, 10))
-
-        ttkb.Label(filtros_frame, text="Hasta:").grid(row=0, column=4, sticky=W)
+        self.crear_filtro_entry(
+            filtros_frame,
+            label="Desde:",
+            var=self.fecha_desde_var,
+            row=0, column=2, width=12
+        )
         self.fecha_hasta_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
-        ttkb.Entry(filtros_frame, textvariable=self.fecha_hasta_var, width=12).grid(row=0, column=5, padx=(5, 20))
+        self.crear_filtro_entry(
+            filtros_frame,
+            label="Hasta:",
+            var=self.fecha_hasta_var,
+            row=0, column=4, width=12
+        )
 
         # Botón buscar
-        ttkb.Button(
+        self.crear_filtro_boton(
             filtros_frame,
             text="Buscar",
-            bootstyle=PRIMARY,
-            command=self.buscar_notas
-        ).grid(row=0, column=6)
+            command=self.buscar_notas,
+            row=0, column=6
+        )
 
-        # Treeview para resultados
-        self.tree = ttkb.Treeview(
+        # Tabla de resultados
+        columns = ['numero', 'tipo', 'fecha', 'factura_ref', 'valor_total', 'estado']
+        headings = ['Número', 'Tipo', 'Fecha', 'Factura Ref.', 'Valor Total', 'Estado']
+        column_widths = [100, 100, 120, 120, 120, 100]
+        anchor_map = [tk.CENTER, tk.CENTER, tk.CENTER, tk.CENTER, tk.E, tk.CENTER]
+        self.tree = self.crear_tabla_resultados(
             self.tab_consultas,
-            columns=['numero', 'tipo', 'fecha', 'factura_ref', 'valor_total', 'estado'],
-            show='headings',
-            bootstyle=PRIMARY,
+            columns=columns,
+            headings=headings,
+            column_widths=column_widths,
+            anchor_map=anchor_map,
             height=15
         )
 
-        # Configurar encabezados
-        self.tree.heading('numero', text='Número', anchor=CENTER)
-        self.tree.heading('tipo', text='Tipo', anchor=CENTER)
-        self.tree.heading('fecha', text='Fecha', anchor=CENTER)
-        self.tree.heading('factura_ref', text='Factura Ref.', anchor=CENTER)
-        self.tree.heading('valor_total', text='Valor Total', anchor=CENTER)
-        self.tree.heading('estado', text='Estado', anchor=CENTER)
-
-        # Configurar columnas con alineación
-        self.tree.column('numero', width=100, anchor=CENTER)
-        self.tree.column('tipo', width=100, anchor=CENTER)
-        self.tree.column('fecha', width=120, anchor=CENTER)
-        self.tree.column('factura_ref', width=120, anchor=CENTER)
-        self.tree.column('valor_total', width=120, anchor=E)  # Números a la derecha
-        self.tree.column('estado', width=100, anchor=CENTER)
-
-        self.tree.pack(fill=BOTH, expand=True, pady=(0, 10))
-
         # Scrollbar
-        scrollbar = ttkb.Scrollbar(self.tab_consultas, orient=VERTICAL, command=self.tree.yview)
+        scrollbar = ttkb.Scrollbar(self.tab_consultas, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side=RIGHT, fill=Y)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     def connect_database(self):
         """Conectar a la base de datos"""
