@@ -19,8 +19,9 @@ class NotasController:
         INSERT INTO notas_credito_debito
         (numero, tipo, fecha_emision, hora_emision, factura_referencia,
          codigo_concepto, descripcion_concepto, valor_base, porcentaje_iva,
-         valor_iva, retencion_renta, porcentaje_retencion, valor_total, cufe, estado)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+         valor_iva, retencion_renta, porcentaje_retencion, valor_total, cufe, estado,
+         nit_emisor, razon_social_emisor, total_bruto)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (
             datos_formulario['numero'],
@@ -37,7 +38,10 @@ class NotasController:
             float(datos_formulario['porcentaje_retencion']),
             float(datos_formulario['valor_total']),
             datos_formulario.get('cufe', ''),
-            'generado'
+            'generado',
+            datos_formulario.get('nit_emisor', ''),
+            datos_formulario.get('razon_social_emisor', ''),
+            float(datos_formulario.get('total_bruto', 0.0)),
         )
         if self.db.execute_query(query, params):
             self.view.mostrar_mensaje('Nota generada con éxito')
