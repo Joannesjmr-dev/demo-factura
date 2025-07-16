@@ -64,11 +64,50 @@ class InterfazNotas:
         self.notebook.add(self.tab_consultas, text="Consultas")
         self.setup_consultas_tab()
 
+    def crear_boton(self, parent, text, command, bootstyle=PRIMARY, side=LEFT, padx=(0, 10)):
+        """Crea un botón con los parámetros dados y lo agrega al parent."""
+        btn = ttkb.Button(parent, text=text, bootstyle=bootstyle, command=command)
+        btn.pack(side=side, padx=padx)
+        return btn
+
+    def crear_entry(self, parent, label, var, row, column, width=15):
+        """Crea un label y un entry en el grid especificado y retorna el entry."""
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W, pady=(5, 0))
+        entry = ttkb.Entry(parent, textvariable=var, width=width)
+        entry.grid(row=row, column=column+1, padx=(5, 20), pady=(5, 0))
+        return entry
+
+    def crear_entry_readonly(self, parent, label, var, row, column, width=15):
+        """Crea un label y un entry de solo lectura en el grid especificado y retorna el entry."""
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W, pady=(5, 0))
+        entry = ttkb.Entry(parent, textvariable=var, width=width, state=READONLY)
+        entry.grid(row=row, column=column+1, padx=(5, 20), pady=(5, 0))
+        return entry
+
+    def crear_combobox(self, parent, label, var, values, row, column, width=40):
+        """Crea un label y un combobox en el grid especificado y retorna el combobox."""
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W)
+        combo = ttkb.Combobox(parent, textvariable=var, values=values, width=width)
+        combo.grid(row=row, column=column+1, padx=(5, 0))
+        return combo
+
+    def crear_text_multilinea(self, parent, label, row, column, width=50, height=3):
+        """Crea un label y un campo de texto multilínea en el grid especificado y retorna el widget Text."""
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.NW, pady=(5, 0))
+        text_widget = tk.Text(parent, height=height, width=width)
+        text_widget.grid(row=row, column=column+1, padx=(5, 0), pady=(5, 0))
+        return text_widget
+
+    def crear_labelframe(self, parent, text, padding=10):
+        """Crea un LabelFrame con el texto y padding dados y lo retorna."""
+        frame = ttkb.LabelFrame(parent, text=text, padding=padding)
+        frame.pack(fill=tk.X, pady=(0, 10))
+        return frame
+
     def setup_nota_tab(self, parent, tipo_nota):
         """Configurar pestaña de nota"""
         # Frame de datos básicos
-        datos_frame = ttkb.LabelFrame(parent, text="Datos Básicos", padding=10)
-        datos_frame.pack(fill=X, pady=(0, 10))
+        datos_frame = self.crear_labelframe(parent, "Datos Básicos")
 
         # Número de nota
         ttkb.Label(datos_frame, text="Número:").grid(row=0, column=0, sticky=W, padx=(0, 20))
@@ -83,8 +122,7 @@ class InterfazNotas:
         ttkb.Entry(datos_frame, textvariable=fecha_var, width=15).grid(row=1, column=1, padx=(5, 20))
 
         # Referencias del documento
-        Referencias_documento_frame = ttkb.LabelFrame(parent, text="Referencias del documento", padding=10)
-        Referencias_documento_frame.pack(fill=X, pady=(0, 10))
+        Referencias_documento_frame = self.crear_labelframe(parent, "Referencias del documento")
 
         # Factura referencia
         ttkb.Label(Referencias_documento_frame, text="Factura Referencia:").grid(row=0, column=0, sticky=W, padx=(0, 20))
@@ -121,14 +159,10 @@ class InterfazNotas:
         ttkb.Entry(Referencias_documento_frame, textvariable=total_bruto_var, width=15).grid(row=1, column=4, padx=(5, 20))
 
         # Concepto De Corrección
-        concepto_frame = ttkb.LabelFrame(parent, text="Concepto De Corrección", padding=10)
-        concepto_frame.pack(fill=X, pady=(0, 10))
+        concepto_frame = self.crear_labelframe(parent, "Concepto De Corrección")
 
-        ttkb.Label(concepto_frame, text="Código Concepto:").grid(row=0, column=0, sticky=W)
         codigo_concepto_var = tk.StringVar()
         setattr(self, f'codigo_concepto_{tipo_nota}_var', codigo_concepto_var)
-
-        # Combobox con conceptos DIAN
         conceptos_nota_credito = [
             "1 - Devolución parcial de los bienes y/o no aceptación parcial del servicio",
             "2 - Anulación de factura electrónica",
@@ -138,100 +172,66 @@ class InterfazNotas:
             "6 - Descuento comercial por volumen de ventas",
             "7 - Otros"
         ]
+        self.crear_combobox(concepto_frame, "Código Concepto:", codigo_concepto_var, conceptos_nota_credito, 0, 0, width=40)
 
-        combo_concepto = ttkb.Combobox(
-            concepto_frame,
-            textvariable=codigo_concepto_var,
-            values=conceptos_nota_credito,
-            width=40
-        )
-        combo_concepto.grid(row=0, column=1, padx=(5, 0))
-
-        # Descripción
-        ttkb.Label(concepto_frame, text="Descripción:").grid(row=1, column=0, sticky=NW, pady=(5, 0))
         descripcion_var = tk.StringVar()
         setattr(self, f'descripcion_{tipo_nota}_var', descripcion_var)
-
-        descripcion_text = tk.Text(concepto_frame, height=3, width=50)
-        descripcion_text.grid(row=1, column=1, padx=(5, 0), pady=(5, 0))
+        descripcion_text = self.crear_text_multilinea(concepto_frame, "Descripción:", 1, 0, width=50, height=3)
         setattr(self, f'descripcion_{tipo_nota}_text', descripcion_text)
 
         # Valores
-        valores_frame = ttkb.LabelFrame(parent, text="Valores", padding=10)
-        valores_frame.pack(fill=X, pady=(0, 10))
+        valores_frame = self.crear_labelframe(parent, "Valores")
 
-        # Valor base
-        ttkb.Label(valores_frame, text="Valor Base:").grid(row=0, column=0, sticky=W)
         valor_base_var = tk.StringVar(value="0.00")
         setattr(self, f'valor_base_{tipo_nota}_var', valor_base_var)
-        entry_base = ttkb.Entry(valores_frame, textvariable=valor_base_var, width=15)
-        entry_base.grid(row=0, column=1, padx=(5, 20))
+        entry_base = self.crear_entry(valores_frame, "Valor Base:", valor_base_var, 0, 0, width=15)
         entry_base.bind('<KeyRelease>', lambda e: self.calcular_valores(tipo_nota))
 
-        # IVA
-        ttkb.Label(valores_frame, text="% IVA:").grid(row=0, column=2, sticky=W)
         iva_var = tk.StringVar(value="0.00")
         setattr(self, f'iva_{tipo_nota}_var', iva_var)
-        entry_iva = ttkb.Entry(valores_frame, textvariable=iva_var, width=10)
-        entry_iva.grid(row=0, column=3, padx=(5, 20))
+        entry_iva = self.crear_entry(valores_frame, "% IVA:", iva_var, 0, 2, width=10)
         entry_iva.bind('<KeyRelease>', lambda e: self.calcular_valores(tipo_nota))
 
-        # Valor IVA
-        ttkb.Label(valores_frame, text="Valor IVA:").grid(row=1, column=0, sticky=W, pady=(5, 0))
         valor_iva_var = tk.StringVar(value="0.00")
         setattr(self, f'valor_iva_{tipo_nota}_var', valor_iva_var)
-        ttkb.Entry(valores_frame, textvariable=valor_iva_var, width=15, state=READONLY).grid(
-            row=1, column=1, padx=(5, 20), pady=(5, 0)
-        )
+        self.crear_entry_readonly(valores_frame, "Valor IVA:", valor_iva_var, 1, 0, width=15)
 
-        # % Retención Renta
-        ttkb.Label(valores_frame, text="% Retención Renta:").grid(row=2, column=0, sticky=W, pady=(5, 0))
-        porcentaje_retencion_var = tk.StringVar(value="0.00")  # Puedes poner el valor por defecto aquí
+        porcentaje_retencion_var = tk.StringVar(value="0.00")
         setattr(self, f'porcentaje_retencion_{tipo_nota}_var', porcentaje_retencion_var)
-        entry_porcentaje_retencion = ttkb.Entry(valores_frame, textvariable=porcentaje_retencion_var, width=10)
-        entry_porcentaje_retencion.grid(row=2, column=1, padx=(5, 20), pady=(5, 0))
+        entry_porcentaje_retencion = self.crear_entry(valores_frame, "% Retención Renta:", porcentaje_retencion_var, 2, 0, width=10)
         entry_porcentaje_retencion.bind('<KeyRelease>', lambda e: self.calcular_valores(tipo_nota))
 
-        # Valor Retención Renta
-        ttkb.Label(valores_frame, text="Valor Retención Renta:").grid(row=2, column=2, sticky=W, pady=(5, 0))
         valor_retencion_var = tk.StringVar(value="0.00")
         setattr(self, f'retencion_renta_{tipo_nota}_var', valor_retencion_var)
-        ttkb.Entry(valores_frame, textvariable=valor_retencion_var, width=15, state=READONLY).grid(
-            row=2, column=3, padx=(5, 0), pady=(5, 0)
-        )
+        self.crear_entry_readonly(valores_frame, "Valor Retención Renta:", valor_retencion_var, 2, 2, width=15)
 
-        # Total
-        ttkb.Label(valores_frame, text="Total:").grid(row=1, column=2, sticky=W, pady=(5, 0))
         total_var = tk.StringVar(value="0.00")
         setattr(self, f'total_{tipo_nota}_var', total_var)
-        ttkb.Entry(valores_frame, textvariable=total_var, width=15, state=READONLY).grid(
-            row=1, column=3, padx=(5, 0), pady=(5, 0)
-        )
+        self.crear_entry_readonly(valores_frame, "Total:", total_var, 1, 2, width=15)
 
         # Botones
         botones_frame = ttkb.Frame(parent)
         botones_frame.pack(fill=X, pady=10)
 
-        ttkb.Button(
+        self.crear_boton(
             botones_frame,
             text=f"Generar Nota {'Crédito' if tipo_nota == 'credito' else 'Débito'}",
             bootstyle=SUCCESS,
             command=lambda: self.generar_nota(tipo_nota)
-        ).pack(side=LEFT, padx=(0, 10))
-
-        ttkb.Button(
+        )
+        self.crear_boton(
             botones_frame,
             text="Limpiar",
             bootstyle=SECONDARY,
             command=lambda: self.limpiar_formulario(tipo_nota)
-        ).pack(side=LEFT, padx=(0, 10))
-
-        ttkb.Button(
+        )
+        self.crear_boton(
             botones_frame,
             text="Exportar XML",
             bootstyle=INFO,
-            command=lambda: self.exportar_xml(tipo_nota)
-        ).pack(side=LEFT)
+            command=lambda: self.exportar_xml(tipo_nota),
+            padx=(0, 0)
+        )
 
     def setup_consultas_tab(self):
         """Configurar pestaña de consultas"""
@@ -339,71 +339,67 @@ class InterfazNotas:
 
         self.db.execute_query(create_table_query)
 
-    def calcular_valores(self, tipo_nota):
-        """Calcular valores de IVA y total"""
+    def obtener_valor_decimal(self, var, default='0.00'):
+        """Devuelve el valor decimal de un StringVar, o un valor por defecto si no es válido."""
         try:
-            valor_base_var = getattr(self, f'valor_base_{tipo_nota}_var')
-            iva_var = getattr(self, f'iva_{tipo_nota}_var')
-            valor_iva_var = getattr(self, f'valor_iva_{tipo_nota}_var')
-            total_var = getattr(self, f'total_{tipo_nota}_var')
+            return Decimal(var.get() or default)
+        except Exception:
+            return Decimal(default)
 
-            base = Decimal(valor_base_var.get() or '0')
-            porcentaje = Decimal(iva_var.get() or '0')
+    def calcular_valores(self, tipo_nota):
+        """Calcular valores de IVA, retención y total."""
+        try:
+            base = self.obtener_valor_decimal(getattr(self, f'valor_base_{tipo_nota}_var'))
+            porcentaje_iva = self.obtener_valor_decimal(getattr(self, f'iva_{tipo_nota}_var'))
+            porcentaje_retencion = self.obtener_valor_decimal(getattr(self, f'porcentaje_retencion_{tipo_nota}_var'))
 
-            valor_iva = (base * porcentaje / 100).quantize(
-                Decimal('0.01'), rounding=ROUND_HALF_UP
-            )
-            total = base + valor_iva
-
-            valor_iva_var.set(f"{valor_iva:.2f}")
-            # Calcular Retención sobre Renta
-            porcentaje_retencion_var = getattr(self, f'porcentaje_retencion_{tipo_nota}_var')
-            valor_retencion_var = getattr(self, f'retencion_renta_{tipo_nota}_var')
-
-            porcentaje_retencion = Decimal(porcentaje_retencion_var.get() or '0')
-            valor_retencion = (base * porcentaje_retencion / 100).quantize(
-                Decimal('0.01'), rounding=ROUND_HALF_UP
-            )
-            valor_retencion_var.set(f"{valor_retencion:.2f}")
-
-            # Total con retención descontada
+            valor_iva = (base * porcentaje_iva / 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            valor_retencion = (base * porcentaje_retencion / 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             total = base + valor_iva - valor_retencion
 
-            total_var.set(f"{total:.2f}")
+            getattr(self, f'valor_iva_{tipo_nota}_var').set(f"{valor_iva:.2f}")
+            getattr(self, f'retencion_renta_{tipo_nota}_var').set(f"{valor_retencion:.2f}")
+            getattr(self, f'total_{tipo_nota}_var').set(f"{total:.2f}")
 
-        except (ValueError, Exception) as e:
+        except Exception as e:
             logger.error(f"Error calculando valores: {e}")
+            messagebox.showerror("Error", "Verifique los valores ingresados.")
 
-        def generar_nota(self, tipo_nota):
-            """
-            Genera una nota crédito o débito, recopilando los datos del formulario,
-            validándolos, generando el CUFE y guardando la información en la base de datos.
-
-            :param tipo_nota: El tipo de nota a generar ('credito' o 'debito').
-            :type tipo_nota: str
-            :raises Exception: Si ocurre un error durante el proceso de generación o guardado de la nota.
-            """
+    def generar_nota(self, tipo_nota):
+        """
+        Genera una nota crédito o débito, recopilando los datos del formulario,
+        validándolos, generando el CUFE y guardando la información en la base de datos.
+        """
         try:
-            # Obtener la fecha y hora actual usando datetime ya importado
+            # Validación previa
+            numero = getattr(self, f'numero_{tipo_nota}_var').get().strip()
+            if not numero:
+                messagebox.showerror("Error de Validación", "El número de la nota es obligatorio.")
+                return
+            fecha_emision = getattr(self, f'fecha_{tipo_nota}_var').get().strip()
+            factura_referencia = getattr(self, f'factura_ref_{tipo_nota}_var').get().strip()
+            codigo_concepto = getattr(self, f'codigo_concepto_{tipo_nota}_var').get().strip()
+            descripcion_concepto = getattr(self, f'descripcion_{tipo_nota}_text').get('1.0', tk.END).strip()
+
+            if not fecha_emision or not factura_referencia or not codigo_concepto or not descripcion_concepto:
+                messagebox.showerror("Error de Validación", "Todos los campos obligatorios deben estar completos.")
+                return
+
             ahora = datetime.now()
-            fecha_actual = ahora.strftime('%Y-%m-%d')
             hora_actual = ahora.strftime('%H:%M:%S')
 
-            # Crear objeto nota
             nota = NotaCreditoDebito(tipo_nota)
-
-            # Obtener datos del formulario
-            nota.datos['numero'] = getattr(self, f'numero_{tipo_nota}_var').get()
-            nota.datos['fecha_emision'] = getattr(self, f'fecha_{tipo_nota}_var').get()
-            nota.datos['factura_referencia'] = getattr(self, f'factura_ref_{tipo_nota}_var').get()
-            nota.datos['codigo_concepto'] = getattr(self, f'codigo_concepto_{tipo_nota}_var').get()
-            nota.datos['descripcion_concepto'] = getattr(self, f'descripcion_{tipo_nota}_text').get('1.0', tk.END).strip()
-            nota.datos['valor_base'] = Decimal(getattr(self, f'valor_base_{tipo_nota}_var').get() or '0')
-            nota.datos['porcentaje_iva'] = Decimal(getattr(self, f'iva_{tipo_nota}_var').get() or '0')
-            nota.datos['valor_iva'] = Decimal(getattr(self, f'valor_iva_{tipo_nota}_var').get() or '0')
-            nota.datos['porcentaje_retencion'] = Decimal(getattr(self, f'porcentaje_retencion_{tipo_nota}_var').get() or '0')
-            nota.datos['retencion_renta'] = Decimal(getattr(self, f'retencion_renta_{tipo_nota}_var').get() or '0')
-            nota.datos['valor_total'] = Decimal(getattr(self, f'total_{tipo_nota}_var').get() or '0')
+            nota.datos['numero'] = numero
+            nota.datos['fecha_emision'] = fecha_emision
+            nota.datos['factura_referencia'] = factura_referencia
+            nota.datos['codigo_concepto'] = codigo_concepto
+            nota.datos['descripcion_concepto'] = descripcion_concepto
+            nota.datos['valor_base'] = self.obtener_valor_decimal(getattr(self, f'valor_base_{tipo_nota}_var'))
+            nota.datos['porcentaje_iva'] = self.obtener_valor_decimal(getattr(self, f'iva_{tipo_nota}_var'))
+            nota.datos['valor_iva'] = self.obtener_valor_decimal(getattr(self, f'valor_iva_{tipo_nota}_var'))
+            nota.datos['porcentaje_retencion'] = self.obtener_valor_decimal(getattr(self, f'porcentaje_retencion_{tipo_nota}_var'))
+            nota.datos['retencion_renta'] = self.obtener_valor_decimal(getattr(self, f'retencion_renta_{tipo_nota}_var'))
+            nota.datos['valor_total'] = self.obtener_valor_decimal(getattr(self, f'total_{tipo_nota}_var'))
 
             # Validar datos
             valido, mensaje = nota.validar_datos()
