@@ -264,6 +264,13 @@ class InterfazNotas:
         tree.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
         return tree
 
+    def crear_scrollbar_vertical(self, parent, widget, side=tk.RIGHT):
+        """Crea y asocia un scrollbar vertical a un widget (por ejemplo, Treeview)."""
+        scrollbar = ttkb.Scrollbar(parent, orient=tk.VERTICAL, command=widget.yview)
+        widget.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=side, fill=tk.Y)
+        return scrollbar
+
     def setup_consultas_tab(self):
         """Configurar pestaña de consultas"""
         # Frame de filtros
@@ -318,9 +325,7 @@ class InterfazNotas:
         )
 
         # Scrollbar
-        scrollbar = ttkb.Scrollbar(self.tab_consultas, orient=tk.VERTICAL, command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.crear_scrollbar_vertical(self.tab_consultas, self.tree)
 
     def connect_database(self):
         """Conectar a la base de datos"""
@@ -389,6 +394,26 @@ class InterfazNotas:
             logger.error(f"Error calculando valores: {e}")
             messagebox.showerror("Error", "Verifique los valores ingresados.")
 
+    def validar_campos_nota(self, tipo_nota):
+        """Valida los campos obligatorios de la nota y retorna (True, '') si todo está bien, o (False, mensaje) si hay error."""
+        campos_obligatorios = [
+            (f'numero_{tipo_nota}_var', "El número de la nota es obligatorio."),
+            (f'fecha_{tipo_nota}_var', "La fecha de la nota es obligatoria."),
+            (f'factura_ref_{tipo_nota}_var', "La factura de referencia es obligatoria."),
+            (f'codigo_concepto_{tipo_nota}_var', "El código de concepto es obligatorio."),
+        ]
+        for var_name, mensaje in campos_obligatorios:
+            valor = getattr(self, var_name).get().strip()
+            if not valor:
+                return False, mensaje
+
+        descripcion = getattr(self, f'descripcion_{tipo_nota}_text').get('1.0', tk.END).strip()
+        if not descripcion:
+            return False, "La descripción es obligatoria."
+
+        # Puedes agregar más validaciones aquí (por ejemplo, formatos de fecha, valores numéricos, etc.)
+        return True, ""
+
     def generar_nota(self, tipo_nota):
         """
         Genera una nota crédito o débito, recopilando los datos del formulario,
@@ -396,18 +421,16 @@ class InterfazNotas:
         """
         try:
             # Validación previa
-            numero = getattr(self, f'numero_{tipo_nota}_var').get().strip()
-            if not numero:
-                messagebox.showerror("Error de Validación", "El número de la nota es obligatorio.")
+            valido, mensaje = self.validar_campos_nota(tipo_nota)
+            if not valido:
+                messagebox.showerror("Error de Validación", mensaje)
                 return
+
+            numero = getattr(self, f'numero_{tipo_nota}_var').get().strip()
             fecha_emision = getattr(self, f'fecha_{tipo_nota}_var').get().strip()
             factura_referencia = getattr(self, f'factura_ref_{tipo_nota}_var').get().strip()
             codigo_concepto = getattr(self, f'codigo_concepto_{tipo_nota}_var').get().strip()
             descripcion_concepto = getattr(self, f'descripcion_{tipo_nota}_text').get('1.0', tk.END).strip()
-
-            if not fecha_emision or not factura_referencia or not codigo_concepto or not descripcion_concepto:
-                messagebox.showerror("Error de Validación", "Todos los campos obligatorios deben estar completos.")
-                return
 
             ahora = datetime.now()
             hora_actual = ahora.strftime('%H:%M:%S')
