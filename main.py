@@ -16,8 +16,6 @@ def main():
     if hasattr(view, 'root') and hasattr(view.root, 'mainloop'):
         view.root.grid_columnconfigure(0, weight=1)
         view.root.mainloop()
-    elif hasattr(view, 'run'):
-        view.run()
     else:
         print('No se encontró método para lanzar la UI')
 

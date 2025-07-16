@@ -113,12 +113,36 @@ class InterfazNotas:
         self.entry_factura_refs[tipo_nota] = self.crear_entry(referencias_frame, "Factura Referencia:", self.factura_ref_vars[tipo_nota], 0, 0, width=20)
         self.entry_factura_refs[tipo_nota].bind('<FocusOut>', lambda e, t=tipo_nota: self.root.after(500, lambda: self.on_factura_ref_change(t)))
         self.entry_factura_refs[tipo_nota].bind('<Return>', lambda e, t=tipo_nota: self.on_factura_ref_change(t))
+        # Frame para los botones
+        botones_frame = ttkb.Frame(parent)
+        botones_frame.pack(fill=tk.X, pady=10)
         self.boton_buscar_factura = ttkb.Button(
-            referencias_frame,
+            botones_frame,
             text="Buscar",
             command=lambda t=tipo_nota: self.on_factura_ref_change(t)
         )
-        self.boton_buscar_factura.grid(row=0, column=2, padx=(5, 0))
+        self.boton_buscar_factura.pack(side=tk.LEFT, padx=(0, 10))
+        self.boton_limpiar = ttkb.Button(
+            botones_frame,
+            text="Limpiar",
+            bootstyle=SECONDARY,
+            command=lambda t=tipo_nota: self.limpiar_formulario(t),
+        )
+        self.boton_limpiar.pack(side=tk.LEFT, padx=(0, 10))
+        self.boton_exportar = ttkb.Button(
+            botones_frame,
+            text="Exportar XML",
+            bootstyle=INFO,
+            command=self.exportar_xml
+        )
+        self.boton_exportar.pack(side=tk.LEFT, padx=(0, 10))
+        self.boton_generar = ttkb.Button(
+            botones_frame,
+            text=f"Generar Nota {'Crédito' if tipo_nota == 'credito' else 'Débito'}",
+            bootstyle=SUCCESS,
+            command=self.on_generar_nota
+        )
+        self.boton_generar.pack(side=tk.LEFT, padx=(0, 10))
         self.fecha_emision_vars[tipo_nota] = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(referencias_frame, "Fecha de Emisión:", self.fecha_emision_vars[tipo_nota], 0, 1, width=15)
         self.nit_emisor_vars[tipo_nota] = tk.StringVar()
@@ -165,31 +189,6 @@ class InterfazNotas:
         entry_base.bind('<KeyRelease>', lambda e: self.calcular_valores())
         entry_iva.bind('<KeyRelease>', lambda e: self.calcular_valores())
         entry_porcentaje_retencion.bind('<KeyRelease>', lambda e: self.calcular_valores())
-
-        # Botones
-        botones_frame = ttkb.Frame(scrollable_frame)
-        botones_frame.pack(fill=tk.X, pady=10)
-        self.crear_boton(
-            botones_frame,
-            text=f"Generar Nota {'Crédito' if tipo_nota == 'credito' else 'Débito'}",
-            bootstyle=SUCCESS,
-            command=self.on_generar_nota,
-            row=0, column=0
-        )
-        self.boton_limpiar = ttkb.Button(
-            parent,
-            text="Limpiar",
-            bootstyle=SECONDARY,
-            command=lambda t=tipo_nota: self.limpiar_formulario(t),
-            )
-        self.boton_limpiar.pack(side=tk.RIGHT, padx=(0, 10), pady=(10, 0))
-        self.crear_boton(
-            botones_frame,
-            text="Exportar XML",
-            bootstyle=INFO,
-            command=self.exportar_xml,
-            row=0, column=2, padx=(0, 0)
-        )
 
     def setup_consultas_tab(self):
         filtros_frame = self.crear_labelframe(self.tab_consultas, "Filtros")
