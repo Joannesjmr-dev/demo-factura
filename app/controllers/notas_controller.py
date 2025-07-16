@@ -64,7 +64,7 @@ class NotasController:
             self.view.mostrar_mensaje("No se encontraron registros")
 
     def buscar_factura_por_numero(self, numero_factura):
-        query = "SELECT * FROM facturas WHERE numero = %s"
+        query = "SELECT * FROM facturas WHERE numero_factura LIKE %s"
         resultados = self.db.fetch_all(query, (numero_factura,))
         if resultados:
             return resultados[0]
