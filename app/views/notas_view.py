@@ -21,6 +21,16 @@ class InterfazNotas:
         self.nit_emisor_vars = {}
         self.raz_soc_emisor_vars = {}
         self.total_bruto_vars = {}
+        # Variables específicas por pestaña
+        self.numero_vars = {}
+        self.codigo_concepto_vars = {}
+        self.descripcion_texts = {}
+        self.valor_base_vars = {}
+        self.iva_vars = {}
+        self.valor_iva_vars = {}
+        self.porcentaje_retencion_vars = {}
+        self.retencion_renta_vars = {}
+        self.total_vars = {}
         main_frame = ttkb.Frame(self.root, padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -103,8 +113,8 @@ class InterfazNotas:
 
         # Ahora, usa scrollable_frame como parent para el contenido del formulario
         datos_frame = self.crear_labelframe(scrollable_frame, "Datos Básicos")
-        self.numero_var = tk.StringVar()
-        self.crear_entry(datos_frame, "Número:", self.numero_var, 0, 0, width=20)
+        self.numero_vars[tipo_nota] = tk.StringVar()
+        self.crear_entry(datos_frame, "Número:", self.numero_vars[tipo_nota], 0, 0, width=20)
         self.fecha_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(datos_frame, "Fecha:", self.fecha_var, 0, 1, width=15)
 
@@ -153,7 +163,7 @@ class InterfazNotas:
         self.crear_entry(referencias_frame, "Total Bruto Factura:", self.total_bruto_vars[tipo_nota], 0, 4, width=15)
 
         concepto_frame = self.crear_labelframe(scrollable_frame, "Concepto De Corrección")
-        self.codigo_concepto_var = tk.StringVar()
+        self.codigo_concepto_vars[tipo_nota] = tk.StringVar()
         conceptos_nota_credito = [
             "1 - Devolución parcial de los bienes y/o no aceptación parcial del servicio",
             "2 - Anulación de factura electrónica",
@@ -163,32 +173,53 @@ class InterfazNotas:
             "6 - Descuento comercial por volumen de ventas",
             "7 - Otros"
         ]
-        self.crear_combobox(concepto_frame, "Código Concepto:", self.codigo_concepto_var, conceptos_nota_credito, 0, 0, width=40)
-        self.descripcion_text = self.crear_text_multilinea(concepto_frame, "Descripción:", 2, 0, width=50, height=3)
+        self.crear_combobox(concepto_frame, "Código Concepto:", self.codigo_concepto_vars[tipo_nota], conceptos_nota_credito, 0, 0, width=40)
+        self.descripcion_texts[tipo_nota] = self.crear_text_multilinea(concepto_frame, "Descripción:", 2, 0, width=50, height=3)
 
         valores_frame = self.crear_labelframe(scrollable_frame, "Valores")
-        valores_frame.grid_columnconfigure(0, weight=1)
+        for i in range(3):
+            valores_frame.grid_columnconfigure(i, weight=1)
 
-        row = 0
-        self.valor_base_var = tk.StringVar(value="0.00")
-        entry_base = self.crear_entry(valores_frame, "Valor Base:", self.valor_base_var, row, 0)
-        row += 2
-        self.iva_var = tk.StringVar(value="0.00")
-        entry_iva = self.crear_entry(valores_frame, "% IVA:", self.iva_var, row, 0)
-        row += 2
-        self.valor_iva_var = tk.StringVar(value="0.00")
-        self.crear_entry_readonly(valores_frame, "Valor IVA:", self.valor_iva_var, row, 0)
-        self.porcentaje_retencion_var = tk.StringVar(value="0.00")
-        entry_porcentaje_retencion = self.crear_entry(valores_frame, "% Retención Renta:", self.porcentaje_retencion_var, 6, 0, width=10)
-        self.retencion_renta_var = tk.StringVar(value="0.00")
-        self.crear_entry_readonly(valores_frame, "Valor Retención Renta:", self.retencion_renta_var, 8, 0, width=15)
-        self.total_var = tk.StringVar(value="0.00")
-        self.crear_entry_readonly(valores_frame, "Total:", self.total_var, 10, 0, width=15)
+        bold_font = ("Arial", 10, "bold")
+        entry_width = 15
+
+        # Primera fila: Valor Base, % IVA, Valor IVA
+        ttkb.Label(valores_frame, text="Valor Base:", font=bold_font).grid(row=0, column=0, sticky=tk.E, pady=(5, 2))
+        ttkb.Label(valores_frame, text="% IVA:", font=bold_font).grid(row=0, column=1, sticky=tk.E, pady=(5, 2))
+        ttkb.Label(valores_frame, text="Valor IVA:", font=bold_font).grid(row=0, column=2, sticky=tk.E, pady=(5, 2))
+        self.valor_base_vars[tipo_nota] = tk.StringVar(value="0.00")
+        entry_base = ttkb.Entry(valores_frame, textvariable=self.valor_base_vars[tipo_nota], width=entry_width, justify="center")
+        entry_base.grid(row=1, column=0, padx=5, pady=2, sticky=tk.EW)
+        self.iva_vars[tipo_nota] = tk.StringVar(value="0.00")
+        entry_iva = ttkb.Entry(valores_frame, textvariable=self.iva_vars[tipo_nota], width=entry_width, justify="center")
+        entry_iva.grid(row=1, column=1, padx=5, pady=2, sticky=tk.EW)
+        self.valor_iva_vars[tipo_nota] = tk.StringVar(value="0.00")
+        entry_iva_read = ttkb.Entry(valores_frame, textvariable=self.valor_iva_vars[tipo_nota], width=entry_width, state="readonly", justify="center")
+        entry_iva_read.grid(row=1, column=2, padx=5, pady=2, sticky=tk.EW)
+
+        # Separador horizontal
+        ttkb.Separator(valores_frame, orient="horizontal").grid(row=2, column=0, columnspan=3, sticky="ew", pady=8)
+
+        # Segunda fila: % Retención Renta, Valor Retención Renta
+        ttkb.Label(valores_frame, text="% Retención Renta:", font=bold_font).grid(row=3, column=0, sticky=tk.E, pady=(5, 2))
+        ttkb.Label(valores_frame, text="Valor Retención Renta:", font=bold_font).grid(row=3, column=1, sticky=tk.E, pady=(5, 2))
+        self.porcentaje_retencion_vars[tipo_nota] = tk.StringVar(value="0.00")
+        entry_porcentaje_retencion = ttkb.Entry(valores_frame, textvariable=self.porcentaje_retencion_vars[tipo_nota], width=entry_width, justify="center")
+        entry_porcentaje_retencion.grid(row=4, column=0, padx=5, pady=2, sticky=tk.EW)
+        self.retencion_renta_vars[tipo_nota] = tk.StringVar(value="0.00")
+        entry_retencion_read = ttkb.Entry(valores_frame, textvariable=self.retencion_renta_vars[tipo_nota], width=entry_width, state="readonly", justify="center")
+        entry_retencion_read.grid(row=4, column=1, padx=5, pady=2, sticky=tk.EW)
+
+        # Total en una fila aparte
+        ttkb.Label(valores_frame, text="Total:", font=bold_font).grid(row=5, column=0, sticky=tk.E, pady=(10, 2))
+        self.total_vars[tipo_nota] = tk.StringVar(value="0.00")
+        entry_total_read = ttkb.Entry(valores_frame, textvariable=self.total_vars[tipo_nota], width=entry_width, state="readonly", justify="center")
+        entry_total_read.grid(row=6, column=0, padx=5, pady=2, sticky=tk.EW)
 
         # Enlazar eventos de cálculo
-        entry_base.bind('<KeyRelease>', lambda e: self.calcular_valores())
-        entry_iva.bind('<KeyRelease>', lambda e: self.calcular_valores())
-        entry_porcentaje_retencion.bind('<KeyRelease>', lambda e: self.calcular_valores())
+        entry_base.bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
+        entry_iva.bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
+        entry_porcentaje_retencion.bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
 
     def setup_consultas_tab(self):
         filtros_frame = self.crear_labelframe(self.tab_consultas, "Filtros")
@@ -218,7 +249,7 @@ class InterfazNotas:
         if tipo_nota is None:
             tipo_nota = self.notebook.tab(self.notebook.select(), "text").lower().replace(' ', '_').replace('nota_', '')
         # Limpiar campos principales
-        self.numero_var.set("")
+        self.numero_vars[tipo_nota].set("")
         # Limpiar referencias del documento
         self.factura_ref_vars[tipo_nota].set("")
         self.fecha_emision_vars[tipo_nota].set(datetime.now().strftime('%Y-%m-%d'))
@@ -226,30 +257,30 @@ class InterfazNotas:
         self.raz_soc_emisor_vars[tipo_nota].set("")
         self.total_bruto_vars[tipo_nota].set("0.00")
         # Limpiar otros campos si lo deseas
-        self.codigo_concepto_var.set("")
-        self.descripcion_text.delete('1.0', 'end')
-        self.valor_base_var.set("0.00")
-        self.iva_var.set("0.00")
-        self.valor_iva_var.set("0.00")
-        self.porcentaje_retencion_var.set("0.00")
-        self.retencion_renta_var.set("0.00")
-        self.total_var.set("0.00")
+        self.codigo_concepto_vars[tipo_nota].set("")
+        self.descripcion_texts[tipo_nota].delete('1.0', 'end')
+        self.valor_base_vars[tipo_nota].set("0.00")
+        self.iva_vars[tipo_nota].set("0.00")
+        self.valor_iva_vars[tipo_nota].set("0.00")
+        self.porcentaje_retencion_vars[tipo_nota].set("0.00")
+        self.retencion_renta_vars[tipo_nota].set("0.00")
+        self.total_vars[tipo_nota].set("0.00")
 
     def exportar_xml(self):
         # Implementa la lógica de exportar XML
         pass
 
-    def calcular_valores(self):
+    def calcular_valores(self, tipo_nota):
         try:
-            base = float(self.valor_base_var.get() or '0')
-            porcentaje_iva = float(self.iva_var.get() or '0')
-            porcentaje_retencion = float(self.porcentaje_retencion_var.get() or '0')
+            base = float(self.valor_base_vars[tipo_nota].get() or '0')
+            porcentaje_iva = float(self.iva_vars[tipo_nota].get() or '0')
+            porcentaje_retencion = float(self.porcentaje_retencion_vars[tipo_nota].get() or '0')
             valor_iva = round(base * porcentaje_iva / 100, 2)
             valor_retencion = round(base * porcentaje_retencion / 100, 2)
             total = base + valor_iva - valor_retencion
-            self.valor_iva_var.set(f"{valor_iva:.2f}")
-            self.retencion_renta_var.set(f"{valor_retencion:.2f}")
-            self.total_var.set(f"{total:.2f}")
+            self.valor_iva_vars[tipo_nota].set(f"{valor_iva:.2f}")
+            self.retencion_renta_vars[tipo_nota].set(f"{valor_retencion:.2f}")
+            self.total_vars[tipo_nota].set(f"{total:.2f}")
         except Exception:
             pass
 
@@ -281,23 +312,23 @@ class InterfazNotas:
             ))
 
     def obtener_datos_formulario(self):
-        tipo_nota = self.notebook.tab(self.notebook.select(), "text").lower().replace(' ', '_').replace('nota_', '')
+        tipo_nota = self.notebook.tab(self.notebook.select(), "text").lower().replace(' ', '_').replace('nota_', '').replace('é', 'e')
         return {
             "tipo_nota": tipo_nota,
-            "numero": self.numero_var.get(),
+            "numero": self.numero_vars[tipo_nota].get(),
             "fecha_emision": self.fecha_emision_vars[tipo_nota].get(),
             "factura_referencia": self.factura_ref_vars[tipo_nota].get(),
             "nit_emisor": self.nit_emisor_vars[tipo_nota].get(),
             "razon_social_emisor": self.raz_soc_emisor_vars[tipo_nota].get(),
             "total_bruto": self.total_bruto_vars[tipo_nota].get(),
-            "codigo_concepto": self.codigo_concepto_var.get(),
-            "descripcion_concepto": self.descripcion_text.get('1.0', 'end').strip(),
-            "valor_base": self.valor_base_var.get(),
-            "porcentaje_iva": self.iva_var.get(),
-            "valor_iva": self.valor_iva_var.get(),
-            "porcentaje_retencion": self.porcentaje_retencion_var.get(),
-            "retencion_renta": self.retencion_renta_var.get(),
-            "valor_total": self.total_var.get(),
+            "codigo_concepto": self.codigo_concepto_vars[tipo_nota].get(),
+            "descripcion_concepto": self.descripcion_texts[tipo_nota].get('1.0', 'end').strip(),
+            "valor_base": self.valor_base_vars[tipo_nota].get(),
+            "porcentaje_iva": self.iva_vars[tipo_nota].get(),
+            "valor_iva": self.valor_iva_vars[tipo_nota].get(),
+            "porcentaje_retencion": self.porcentaje_retencion_vars[tipo_nota].get(),
+            "retencion_renta": self.retencion_renta_vars[tipo_nota].get(),
+            "valor_total": self.total_vars[tipo_nota].get(),
         }
 
     def obtener_filtros_consulta(self):
