@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS notas_credito_debito (
     numero VARCHAR(50) NOT NULL UNIQUE COMMENT 'Número consecutivo de la nota',
     prefijo VARCHAR(10) DEFAULT NULL COMMENT 'Prefijo autorizado por DIAN',
     tipo ENUM('credito', 'debito') NOT NULL COMMENT 'Tipo de nota',
+    tipo_operacion VARCHAR(5) NOT NULL COMMENT 'Tipo de operación: 20, 22, 30, 32',
     fecha_emision DATE NOT NULL COMMENT 'Fecha de emisión',
     hora_emision TIME NOT NULL COMMENT 'Hora de emisión',
     fecha_vencimiento DATE DEFAULT NULL COMMENT 'Fecha de vencimiento si aplica',

@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS notas_credito_debito (
     id INT AUTO_INCREMENT PRIMARY KEY,
     numero VARCHAR(50) NOT NULL UNIQUE,
     tipo ENUM('credito', 'debito') NOT NULL,
+    tipo_operacion VARCHAR(5) NOT NULL COMMENT 'Tipo de operación: 20, 22, 30, 32',
     fecha_emision DATE NOT NULL,
     hora_emision TIME NOT NULL,
     factura_referencia VARCHAR(50) NOT NULL,

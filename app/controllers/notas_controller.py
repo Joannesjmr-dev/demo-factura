@@ -17,15 +17,16 @@ class NotasController:
         # Guardar en BD
         query = """
         INSERT INTO notas_credito_debito
-        (numero, tipo, fecha_emision, hora_emision, factura_referencia,
+        (numero, tipo, tipo_operacion, fecha_emision, hora_emision, factura_referencia,
          codigo_concepto, descripcion_concepto, valor_base, porcentaje_iva,
          valor_iva, retencion_renta, porcentaje_retencion, valor_total, cufe, estado,
          nit_emisor, razon_social_emisor, total_bruto)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (
             datos_formulario['numero'],
             datos_formulario['tipo_nota'],
+            datos_formulario['tipo_operacion'],
             datos_formulario['fecha_emision'],
             datos_formulario.get('hora_emision', ''),
             datos_formulario['factura_referencia'],
@@ -50,7 +51,7 @@ class NotasController:
 
     def consultar_notas(self, filtros):
         query = """
-        SELECT numero, tipo, fecha_emision, factura_referencia,
+        SELECT numero, tipo, tipo_operacion, fecha_emision, factura_referencia,
                valor_total, estado
         FROM notas_credito_debito
         WHERE fecha_emision BETWEEN %s AND %s

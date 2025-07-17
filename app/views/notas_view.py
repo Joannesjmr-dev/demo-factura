@@ -11,8 +11,31 @@ class InterfazNotas:
         self.controller: Optional[NotasController] = controller
         self.root = ttkb.Window(themename="litera")
         self.root.title("Módulo Notas Crédito y Débito - DIAN")
-        self.root.geometry("1200x800")
+        
+        # Autoajustar al tamaño de la pantalla
+        self.autoajustar_ventana()
+        
         self.setup_ui()
+
+    def autoajustar_ventana(self):
+        """Autoajusta la ventana al tamaño de la pantalla"""
+        # Obtener las dimensiones de la pantalla
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        # Calcular el tamaño de la ventana (100% del tamaño de la pantalla)
+        window_width = int(screen_width * 1.0)
+        window_height = int(screen_height * 1.0)
+        
+        # Calcular la posición para centrar la ventana
+        x_position = (screen_width - window_width) // 2
+        y_position = (screen_height - window_height) // 2
+        
+        # Configurar la geometría de la ventana
+        self.root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
+        
+        # Opcional: hacer que la ventana sea redimensionable
+        self.root.resizable(True, True)
 
     def setup_ui(self):
         self.factura_ref_vars = {}
@@ -111,7 +134,32 @@ class InterfazNotas:
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Ahora, usa scrollable_frame como parent para el contenido del formulario
+        # --- NUEVO: Tipo de Operación ---
+        if not hasattr(self, 'tipo_operacion_vars'):
+            self.tipo_operacion_vars = {}
+        if tipo_nota == 'credito':
+            tipo_operacion_values = [
+                "20 - Nota Crédito que referencia una factura electrónica",
+                "22 - Nota Crédito sin referencia a facturas"
+            ]
+            default_tipo_operacion = tipo_operacion_values[0]
+        else:
+            tipo_operacion_values = [
+                "30 - Nota Débito que referencia una factura electrónica",
+                "32 - Nota Débito sin referencia a facturas"
+            ]
+            default_tipo_operacion = tipo_operacion_values[0]
+        self.tipo_operacion_vars[tipo_nota] = tk.StringVar(value=default_tipo_operacion)
+        tipo_operacion_frame = self.crear_labelframe(scrollable_frame, "Tipo de Operación")
+        self.crear_combobox(
+            tipo_operacion_frame,
+            "Tipo de Operación:",
+            self.tipo_operacion_vars[tipo_nota],
+            tipo_operacion_values,
+            0, 0, width=50
+        )
+        # --- FIN NUEVO ---
+
         datos_frame = self.crear_labelframe(scrollable_frame, "Datos Básicos")
         self.numero_vars[tipo_nota] = tk.StringVar()
         self.crear_entry(datos_frame, "Número:", self.numero_vars[tipo_nota], 0, 0, width=20)
@@ -230,10 +278,10 @@ class InterfazNotas:
         self.fecha_hasta_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(filtros_frame, "Hasta:", self.fecha_hasta_var, 0, 4, width=12)
         self.crear_boton(filtros_frame, "Buscar", self.buscar_notas, bootstyle=PRIMARY, row=0, column=6, padx=(0, 0))
-        columns = ['numero', 'tipo', 'fecha', 'factura_ref', 'valor_total', 'estado']
-        headings = ['Número', 'Tipo', 'Fecha', 'Factura Ref.', 'Valor Total', 'Estado']
-        column_widths = [100, 100, 120, 120, 120, 100]
-        anchor_map = [tk.CENTER, tk.CENTER, tk.CENTER, tk.CENTER, tk.E, tk.CENTER]
+        columns = ['numero', 'tipo', 'tipo_operacion', 'fecha', 'factura_ref', 'valor_total', 'estado']
+        headings = ['Número', 'Tipo', 'Tipo Operación', 'Fecha', 'Factura Ref.', 'Valor Total', 'Estado']
+        column_widths = [100, 100, 140, 120, 120, 120, 100]
+        anchor_map = [tk.CENTER, tk.CENTER, tk.CENTER, tk.CENTER, tk.CENTER, tk.E, tk.CENTER]
         self.tree = self.crear_tabla_resultados(
             self.tab_consultas,
             columns=columns,
@@ -302,9 +350,11 @@ class InterfazNotas:
         self.tree.delete(*self.tree.get_children())
         for nota in resultados:
             tipo_display = "Nota Crédito" if nota['tipo'] == 'credito' else "Nota Débito"
+            tipo_operacion = nota.get('tipo_operacion', '')
             self.tree.insert('', 'end', values=(
                 nota['numero'],
                 tipo_display,
+                tipo_operacion,
                 nota['fecha_emision'],
                 nota['factura_referencia'],
                 f"${nota['valor_total']:,.2f}",
@@ -315,6 +365,9 @@ class InterfazNotas:
         tipo_nota = self.notebook.tab(self.notebook.select(), "text").lower().replace(' ', '_').replace('nota_', '').replace('é', 'e')
         return {
             "tipo_nota": tipo_nota,
+            # --- NUEVO: tipo_operacion ---
+            "tipo_operacion": self.tipo_operacion_vars[tipo_nota].get() if hasattr(self, 'tipo_operacion_vars') and tipo_nota in self.tipo_operacion_vars else None,
+            # --- FIN NUEVO ---
             "numero": self.numero_vars[tipo_nota].get(),
             "fecha_emision": self.fecha_emision_vars[tipo_nota].get(),
             "factura_referencia": self.factura_ref_vars[tipo_nota].get(),
