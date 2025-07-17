@@ -363,11 +363,12 @@ class InterfazNotas:
 
     def obtener_datos_formulario(self):
         tipo_nota = self.notebook.tab(self.notebook.select(), "text").lower().replace(' ', '_').replace('nota_', '').replace('é', 'e')
+        # Extraer solo el código de tipo_operacion (ej: '20', '22', '30', '32')
+        tipo_operacion_full = self.tipo_operacion_vars[tipo_nota].get() if hasattr(self, 'tipo_operacion_vars') and tipo_nota in self.tipo_operacion_vars else None
+        tipo_operacion = tipo_operacion_full.split(' - ')[0] if tipo_operacion_full else None
         return {
             "tipo_nota": tipo_nota,
-            # --- NUEVO: tipo_operacion ---
-            "tipo_operacion": self.tipo_operacion_vars[tipo_nota].get() if hasattr(self, 'tipo_operacion_vars') and tipo_nota in self.tipo_operacion_vars else None,
-            # --- FIN NUEVO ---
+            "tipo_operacion": tipo_operacion,
             "numero": self.numero_vars[tipo_nota].get(),
             "fecha_emision": self.fecha_emision_vars[tipo_nota].get(),
             "factura_referencia": self.factura_ref_vars[tipo_nota].get(),

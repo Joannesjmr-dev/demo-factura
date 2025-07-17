@@ -14,6 +14,18 @@ class NotasController:
         if not valido:
             self.view.mostrar_mensaje(mensaje)
             return
+        # Validar si el número de nota ya existe
+        query_check = "SELECT COUNT(*) as count FROM notas_credito_debito WHERE numero = %s"
+        result_check = self.db.fetch_all(query_check, (datos_formulario['numero'],))
+        count = 0
+        if result_check and isinstance(result_check[0], dict):
+            try:
+                count = int(result_check[0]['count'])
+            except (KeyError, ValueError, TypeError):
+                count = 0
+        if count > 0:
+            self.view.mostrar_mensaje('El número de nota ya existe. Por favor, ingrese uno diferente.')
+            return
         # Guardar en BD
         query = """
         INSERT INTO notas_credito_debito
