@@ -5,6 +5,8 @@ from ttkbootstrap.constants import *
 from datetime import datetime
 from typing import Optional
 from app.controllers.notas_controller import NotasController
+import pandas as pd
+import os
 
 class InterfazNotas:
     def __init__(self, controller: Optional[NotasController] = None):
@@ -316,8 +318,23 @@ class InterfazNotas:
         self.crear_boton(filtros_frame, "Exportar a Excel", self.exportar_reporte_excel, bootstyle=SUCCESS, row=0, column=6, padx=(0, 0))
 
     def exportar_reporte_excel(self):
-        # Aquí irá la lógica de exportación a Excel
-        self.mostrar_mensaje("Funcionalidad de exportación a Excel próximamente disponible.")
+        # Obtener filtros de la UI
+        filtros = {
+            "tipo": self.reporte_tipo_var.get(),
+            "fecha_desde": self.reporte_fecha_desde_var.get(),
+            "fecha_hasta": self.reporte_fecha_hasta_var.get(),
+        }
+        if self.controller is not None:
+            resultados = self.controller.exportar_reporte_excel(filtros)
+            if resultados:
+                df = pd.DataFrame(resultados)
+                # Crear carpeta de reportes si no existe
+                os.makedirs('reportes', exist_ok=True)
+                nombre_archivo = f"reportes/reporte_notas_{filtros['fecha_desde']}_a_{filtros['fecha_hasta']}.xlsx"
+                df.to_excel(nombre_archivo, index=False)
+                self.mostrar_mensaje(f"Reporte exportado exitosamente a: {nombre_archivo}")
+            else:
+                self.mostrar_mensaje("No hay datos para exportar en el rango seleccionado.")
 
     # Métodos stub para limpiar formulario y exportar XML
     def limpiar_formulario(self, tipo_nota=None):
