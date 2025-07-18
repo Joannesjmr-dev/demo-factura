@@ -82,6 +82,11 @@ class InterfazNotas:
         self.notebook.add(self.tab_consultas, text="Consultas")
         self.setup_consultas_tab()
 
+        # Pestaña Reportes
+        self.tab_reportes = ttkb.Frame(self.notebook)
+        self.notebook.add(self.tab_reportes, text="Reportes")
+        self.setup_reportes_tab()
+
     # Métodos de creación de widgets (copiados/adaptados de gui_fix_v5.py)
     def crear_boton(self, parent, text, command, bootstyle=PRIMARY, row=0, column=0, padx=(0, 10)):
         btn = ttkb.Button(parent, text=text, bootstyle=bootstyle, command=command)
@@ -212,16 +217,24 @@ class InterfazNotas:
 
         concepto_frame = self.crear_labelframe(scrollable_frame, "Concepto De Corrección")
         self.codigo_concepto_vars[tipo_nota] = tk.StringVar()
-        conceptos_nota_credito = [
-            "1 - Devolución parcial de los bienes y/o no aceptación parcial del servicio",
-            "2 - Anulación de factura electrónica",
-            "3 - Rebaja o descuento parcial o total",
-            "4 - Ajuste de precio",
-            "5 - Descuento comercial por pronto pago",
-            "6 - Descuento comercial por volumen de ventas",
-            "7 - Otros"
-        ]
-        self.crear_combobox(concepto_frame, "Código Concepto:", self.codigo_concepto_vars[tipo_nota], conceptos_nota_credito, 0, 0, width=40)
+        if tipo_nota == 'credito':
+            conceptos = [
+                "1 - Devolución parcial de los bienes y/o no aceptación parcial del servicio",
+                "2 - Anulación de factura electrónica",
+                "3 - Rebaja o descuento parcial o total",
+                "4 - Ajuste de precio",
+                "5 - Descuento comercial por pronto pago",
+                "6 - Descuento comercial por volumen de ventas",
+                "7 - Otros"
+            ]
+        else:  # debito
+            conceptos = [
+                "1 - Intereses",
+                "2 - Gastos por cobrar",
+                "3 - Cambio del valor",
+                "4 - Otros"
+            ]
+        self.crear_combobox(concepto_frame, "Código Concepto:", self.codigo_concepto_vars[tipo_nota], conceptos, 0, 0, width=40)
         self.descripcion_texts[tipo_nota] = self.crear_text_multilinea(concepto_frame, "Descripción:", 2, 0, width=50, height=3)
 
         valores_frame = self.crear_labelframe(scrollable_frame, "Valores")
@@ -292,6 +305,20 @@ class InterfazNotas:
         )
         self.crear_scrollbar_vertical(self.tab_consultas, self.tree)
 
+    def setup_reportes_tab(self):
+        filtros_frame = self.crear_labelframe(self.tab_reportes, "Filtros de Reporte")
+        self.reporte_tipo_var = tk.StringVar(value="Todos")
+        self.crear_combobox(filtros_frame, "Tipo:", self.reporte_tipo_var, ["Todos", "Nota Crédito", "Nota Débito"], 0, 0, width=15)
+        self.reporte_fecha_desde_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+        self.crear_entry(filtros_frame, "Desde:", self.reporte_fecha_desde_var, 0, 2, width=12)
+        self.reporte_fecha_hasta_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+        self.crear_entry(filtros_frame, "Hasta:", self.reporte_fecha_hasta_var, 0, 4, width=12)
+        self.crear_boton(filtros_frame, "Exportar a Excel", self.exportar_reporte_excel, bootstyle=SUCCESS, row=0, column=6, padx=(0, 0))
+
+    def exportar_reporte_excel(self):
+        # Aquí irá la lógica de exportación a Excel
+        self.mostrar_mensaje("Funcionalidad de exportación a Excel próximamente disponible.")
+
     # Métodos stub para limpiar formulario y exportar XML
     def limpiar_formulario(self, tipo_nota=None):
         if tipo_nota is None:
@@ -304,6 +331,13 @@ class InterfazNotas:
         self.nit_emisor_vars[tipo_nota].set("")
         self.raz_soc_emisor_vars[tipo_nota].set("")
         self.total_bruto_vars[tipo_nota].set("0.00")
+        # Restablecer tipo de operación al valor por defecto
+        if tipo_nota == 'credito':
+            default_tipo_operacion = "20 - Nota Crédito que referencia una factura electrónica"
+        else:
+            default_tipo_operacion = "30 - Nota Débito que referencia una factura electrónica"
+        if hasattr(self, 'tipo_operacion_vars') and tipo_nota in self.tipo_operacion_vars:
+            self.tipo_operacion_vars[tipo_nota].set(default_tipo_operacion)
         # Limpiar otros campos si lo deseas
         self.codigo_concepto_vars[tipo_nota].set("")
         self.descripcion_texts[tipo_nota].delete('1.0', 'end')
@@ -366,6 +400,9 @@ class InterfazNotas:
         # Extraer solo el código de tipo_operacion (ej: '20', '22', '30', '32')
         tipo_operacion_full = self.tipo_operacion_vars[tipo_nota].get() if hasattr(self, 'tipo_operacion_vars') and tipo_nota in self.tipo_operacion_vars else None
         tipo_operacion = tipo_operacion_full.split(' - ')[0] if tipo_operacion_full else None
+        # Extraer solo el código del concepto (ej: '1', '2', ...)
+        codigo_concepto_full = self.codigo_concepto_vars[tipo_nota].get()
+        codigo_concepto = codigo_concepto_full.split(' - ')[0] if codigo_concepto_full else None
         return {
             "tipo_nota": tipo_nota,
             "tipo_operacion": tipo_operacion,
@@ -375,7 +412,7 @@ class InterfazNotas:
             "nit_emisor": self.nit_emisor_vars[tipo_nota].get(),
             "razon_social_emisor": self.raz_soc_emisor_vars[tipo_nota].get(),
             "total_bruto": self.total_bruto_vars[tipo_nota].get(),
-            "codigo_concepto": self.codigo_concepto_vars[tipo_nota].get(),
+            "codigo_concepto": codigo_concepto,
             "descripcion_concepto": self.descripcion_texts[tipo_nota].get('1.0', 'end').strip(),
             "valor_base": self.valor_base_vars[tipo_nota].get(),
             "porcentaje_iva": self.iva_vars[tipo_nota].get(),
