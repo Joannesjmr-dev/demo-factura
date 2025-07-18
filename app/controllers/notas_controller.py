@@ -80,6 +80,23 @@ class NotasController:
         else:
             self.view.mostrar_mensaje("No se encontraron registros")
 
+    def exportar_reporte_excel(self, filtros):
+        query = """
+        SELECT numero, tipo, tipo_operacion, fecha_emision, factura_referencia,
+               codigo_concepto, descripcion_concepto, valor_base, porcentaje_iva, valor_iva,
+               porcentaje_retencion, retencion_renta, valor_total, estado, nit_emisor, razon_social_emisor, total_bruto
+        FROM notas_credito_debito
+        WHERE fecha_emision BETWEEN %s AND %s
+        """
+        params = [filtros['fecha_desde'], filtros['fecha_hasta']]
+        if filtros['tipo'] != "Todos":
+            tipo_filtro = "credito" if filtros['tipo'] == "Nota Crédito" else "debito"
+            query += " AND tipo = %s"
+            params.append(tipo_filtro)
+        query += " ORDER BY fecha_emision DESC, numero DESC"
+        resultados = self.db.fetch_all(query, params)
+        return resultados
+
     def buscar_factura_por_numero(self, numero_factura):
         query = "SELECT * FROM facturas WHERE numero_factura LIKE %s"
         resultados = self.db.fetch_all(query, (numero_factura,))
