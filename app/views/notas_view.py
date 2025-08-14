@@ -57,6 +57,9 @@ class InterfazNotas:
         self.porcentaje_retencion_vars = {}
         self.retencion_renta_vars = {}
         self.total_vars = {}
+        # Widgets DateEntry por pestaña
+        self.fecha_entries = {}
+        self.fecha_emision_entries = {}
         main_frame = ttkb.Frame(self.root, padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -108,9 +111,18 @@ class InterfazNotas:
         entry.grid(row=row+1, column=column, padx=(5, 20), pady=(5, 0))
         return entry
 
-    def crear_date_entry(self, parent, label, var, row, column, width=15, pady=(0, 10)):
+    def crear_date_entry(self, parent, label, row, column, width=15, startdate=None, pady=(0, 10)):
         ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W, pady=(0, 2))
-        date_entry = DateEntry(parent, dateformat='%Y-%m-%d', firstweekday=0, width=width, bootstyle=PRIMARY, textvariable=var)
+        date_entry = DateEntry(parent, dateformat='%Y-%m-%d', firstweekday=0, width=width, bootstyle=PRIMARY)
+        # Establecer fecha inicial manualmente en el Entry interno
+        try:
+            if startdate is None:
+                startdate = datetime.now()
+            date_str = startdate.strftime('%Y-%m-%d')
+            date_entry.entry.delete(0, tk.END)
+            date_entry.entry.insert(0, date_str)
+        except Exception:
+            pass
         date_entry.grid(row=row+1, column=column, padx=(5, 20), pady=pady, sticky=tk.EW)
         return date_entry
 
@@ -177,8 +189,7 @@ class InterfazNotas:
         datos_frame = self.crear_labelframe(scrollable_frame, "Datos Básicos")
         self.numero_vars[tipo_nota] = tk.StringVar()
         self.crear_entry(datos_frame, "Número:", self.numero_vars[tipo_nota], 0, 0, width=20)
-        self.fecha_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
-        self.crear_date_entry(datos_frame, "Fecha:", self.fecha_var, 0, 1, width=15)
+        self.fecha_entries[tipo_nota] = self.crear_date_entry(datos_frame, "Fecha:", 0, 1, width=15, startdate=datetime.now())
 
         referencias_frame = self.crear_labelframe(scrollable_frame, "Referencias del documento")
         self.factura_ref_vars[tipo_nota] = tk.StringVar()
@@ -212,8 +223,7 @@ class InterfazNotas:
             command=self.on_generar_nota
         )
         self.boton_generar.pack(side=tk.LEFT, padx=(0, 10))
-        self.fecha_emision_vars[tipo_nota] = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
-        self.crear_date_entry(referencias_frame, "Fecha de Emisión:", self.fecha_emision_vars[tipo_nota], 0, 1, width=15)
+        self.fecha_emision_entries[tipo_nota] = self.crear_date_entry(referencias_frame, "Fecha de Emisión:", 0, 1, width=15, startdate=datetime.now())
         self.nit_emisor_vars[tipo_nota] = tk.StringVar()
         self.crear_entry(referencias_frame, "Nit del Emisor:", self.nit_emisor_vars[tipo_nota], 0, 2, width=20)
         self.raz_soc_emisor_vars[tipo_nota] = tk.StringVar()
@@ -348,7 +358,14 @@ class InterfazNotas:
         self.numero_vars[tipo_nota].set("")
         # Limpiar referencias del documento
         self.factura_ref_vars[tipo_nota].set("")
-        self.fecha_emision_vars[tipo_nota].set(datetime.now().strftime('%Y-%m-%d'))
+        try:
+            now_str = datetime.now().strftime('%Y-%m-%d')
+            self.fecha_entries[tipo_nota].entry.delete(0, tk.END)
+            self.fecha_entries[tipo_nota].entry.insert(0, now_str)
+            self.fecha_emision_entries[tipo_nota].entry.delete(0, tk.END)
+            self.fecha_emision_entries[tipo_nota].entry.insert(0, now_str)
+        except Exception:
+            pass
         self.nit_emisor_vars[tipo_nota].set("")
         self.raz_soc_emisor_vars[tipo_nota].set("")
         self.total_bruto_vars[tipo_nota].set("0.00")
@@ -428,7 +445,7 @@ class InterfazNotas:
             "tipo_nota": tipo_nota,
             "tipo_operacion": tipo_operacion,
             "numero": self.numero_vars[tipo_nota].get(),
-            "fecha_emision": self.fecha_emision_vars[tipo_nota].get(),
+            "fecha_emision": self.fecha_emision_entries[tipo_nota].entry.get(),
             "factura_referencia": self.factura_ref_vars[tipo_nota].get(),
             "nit_emisor": self.nit_emisor_vars[tipo_nota].get(),
             "razon_social_emisor": self.raz_soc_emisor_vars[tipo_nota].get(),
@@ -487,7 +504,12 @@ class InterfazNotas:
                     'periodo_factura', 'notas_finales', 'created_at', 'updated_at'
                 ]
                 resultado = dict(zip(campos, resultado))
-            self.fecha_emision_vars[tipo_nota].set(str(resultado.get('fecha_emision', '')))
+            try:
+                fecha_emision = str(resultado.get('fecha_emision', ''))
+                self.fecha_emision_entries[tipo_nota].entry.delete(0, tk.END)
+                self.fecha_emision_entries[tipo_nota].entry.insert(0, fecha_emision)
+            except Exception:
+                pass
             self.nit_emisor_vars[tipo_nota].set(str(resultado.get('numero_documento', '')))
             self.raz_soc_emisor_vars[tipo_nota].set(str(resultado.get('razon_social', '')))
             self.total_bruto_vars[tipo_nota].set(str(resultado.get('total_factura', '0.00')))
