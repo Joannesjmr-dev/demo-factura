@@ -91,7 +91,7 @@ class InterfazNotas:
 
     # Métodos de creación de widgets (copiados/adaptados de gui_fix_v5.py)
     def crear_boton(self, parent, text, command, bootstyle=PRIMARY, row=0, column=0, padx=(0, 10)):
-        btn = ttkb.Button(parent, text=text, bootstyle=bootstyle, command=command)
+        btn = ttkb.Button(parent, text=text, command=command)
         btn.grid(row=row, column=column, padx=padx)
         return btn
 
@@ -190,21 +190,18 @@ class InterfazNotas:
         self.boton_limpiar = ttkb.Button(
             botones_frame,
             text="Limpiar",
-            bootstyle=SECONDARY,
             command=lambda t=tipo_nota: self.limpiar_formulario(t),
         )
         self.boton_limpiar.pack(side=tk.LEFT, padx=(0, 10))
         self.boton_exportar = ttkb.Button(
             botones_frame,
             text="Exportar XML",
-            bootstyle=INFO,
             command=self.exportar_xml
         )
         self.boton_exportar.pack(side=tk.LEFT, padx=(0, 10))
         self.boton_generar = ttkb.Button(
             botones_frame,
             text=f"Generar Nota {'Crédito' if tipo_nota == 'credito' else 'Débito'}",
-            bootstyle=SUCCESS,
             command=self.on_generar_nota
         )
         self.boton_generar.pack(side=tk.LEFT, padx=(0, 10))
@@ -292,7 +289,7 @@ class InterfazNotas:
         self.crear_entry(filtros_frame, "Desde:", self.fecha_desde_var, 0, 2, width=12)
         self.fecha_hasta_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(filtros_frame, "Hasta:", self.fecha_hasta_var, 0, 4, width=12)
-        self.crear_boton(filtros_frame, "Buscar", self.buscar_notas, bootstyle=PRIMARY, row=0, column=6, padx=(0, 0))
+        self.crear_boton(filtros_frame, "Buscar", self.buscar_notas, row=0, column=6, padx=(0, 0))
         columns = ['numero', 'tipo', 'tipo_operacion', 'fecha', 'factura_ref', 'valor_total', 'estado']
         headings = ['Número', 'Tipo', 'Tipo Operación', 'Fecha', 'Factura Ref.', 'Valor Total', 'Estado']
         column_widths = [100, 100, 140, 120, 120, 120, 100]
@@ -315,7 +312,7 @@ class InterfazNotas:
         self.crear_entry(filtros_frame, "Desde:", self.reporte_fecha_desde_var, 0, 2, width=12)
         self.reporte_fecha_hasta_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
         self.crear_entry(filtros_frame, "Hasta:", self.reporte_fecha_hasta_var, 0, 4, width=12)
-        self.crear_boton(filtros_frame, "Exportar a Excel", self.exportar_reporte_excel, bootstyle=SUCCESS, row=0, column=6, padx=(0, 0))
+        self.crear_boton(filtros_frame, "Exportar a Excel", self.exportar_reporte_excel, row=0, column=6, padx=(0, 0))
 
     def exportar_reporte_excel(self):
         # Obtener filtros de la UI
@@ -471,7 +468,10 @@ class InterfazNotas:
         var = self.factura_ref_vars[tipo_nota]
         var.set(entry.get())
         numero = var.get().strip()
-        resultado = self.controller.buscar_factura_por_numero(numero)
+        if self.controller is not None:
+            resultado = self.controller.buscar_factura_por_numero(numero)
+        else:
+            resultado = None
         if resultado:
             if not isinstance(resultado, dict):
                 campos = [
