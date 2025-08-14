@@ -1,5 +1,6 @@
 from app.models.nota import NotaCreditoDebito
 from app.models.database import DatabaseManager
+from datetime import datetime
 
 class NotasController:
     def __init__(self, view):
@@ -40,7 +41,7 @@ class NotasController:
             datos_formulario['tipo_nota'],
             datos_formulario['tipo_operacion'],
             datos_formulario['fecha_emision'],
-            datos_formulario.get('hora_emision', ''),
+            datos_formulario.get('hora_emision') or datetime.now().strftime('%H:%M:%S'),
             datos_formulario['factura_referencia'],
             datos_formulario['codigo_concepto'],
             datos_formulario['descripcion_concepto'],

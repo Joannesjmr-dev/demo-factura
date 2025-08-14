@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import ttkbootstrap as ttkb
 from ttkbootstrap.constants import *
+from ttkbootstrap.widgets import DateEntry
 from datetime import datetime
 from typing import Optional
 from app.controllers.notas_controller import NotasController
@@ -107,6 +108,12 @@ class InterfazNotas:
         entry.grid(row=row+1, column=column, padx=(5, 20), pady=(5, 0))
         return entry
 
+    def crear_date_entry(self, parent, label, var, row, column, width=15, pady=(0, 10)):
+        ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W, pady=(0, 2))
+        date_entry = DateEntry(parent, dateformat='%Y-%m-%d', firstweekday=0, width=width, bootstyle=PRIMARY, textvariable=var)
+        date_entry.grid(row=row+1, column=column, padx=(5, 20), pady=pady, sticky=tk.EW)
+        return date_entry
+
     def crear_combobox(self, parent, label, var, values, row, column, width=40):
         ttkb.Label(parent, text=label).grid(row=row, column=column, sticky=tk.W)
         combo = ttkb.Combobox(parent, textvariable=var, values=values, width=width)
@@ -171,7 +178,7 @@ class InterfazNotas:
         self.numero_vars[tipo_nota] = tk.StringVar()
         self.crear_entry(datos_frame, "Número:", self.numero_vars[tipo_nota], 0, 0, width=20)
         self.fecha_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
-        self.crear_entry(datos_frame, "Fecha:", self.fecha_var, 0, 1, width=15)
+        self.crear_date_entry(datos_frame, "Fecha:", self.fecha_var, 0, 1, width=15)
 
         referencias_frame = self.crear_labelframe(scrollable_frame, "Referencias del documento")
         self.factura_ref_vars[tipo_nota] = tk.StringVar()
@@ -206,7 +213,7 @@ class InterfazNotas:
         )
         self.boton_generar.pack(side=tk.LEFT, padx=(0, 10))
         self.fecha_emision_vars[tipo_nota] = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
-        self.crear_entry(referencias_frame, "Fecha de Emisión:", self.fecha_emision_vars[tipo_nota], 0, 1, width=15)
+        self.crear_date_entry(referencias_frame, "Fecha de Emisión:", self.fecha_emision_vars[tipo_nota], 0, 1, width=15)
         self.nit_emisor_vars[tipo_nota] = tk.StringVar()
         self.crear_entry(referencias_frame, "Nit del Emisor:", self.nit_emisor_vars[tipo_nota], 0, 2, width=20)
         self.raz_soc_emisor_vars[tipo_nota] = tk.StringVar()
