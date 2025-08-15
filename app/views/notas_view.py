@@ -47,6 +47,7 @@ class InterfazNotas:
         self.nit_emisor_vars = {}
         self.raz_soc_emisor_vars = {}
         self.total_bruto_vars = {}
+        self.valor_bruto_vars = {}
         # Variables específicas por pestaña
         self.numero_vars = {}
         self.codigo_concepto_vars = {}
@@ -229,7 +230,9 @@ class InterfazNotas:
         self.raz_soc_emisor_vars[tipo_nota] = tk.StringVar()
         self.crear_entry(referencias_frame, "Razón Social del Emisor:", self.raz_soc_emisor_vars[tipo_nota], 0, 3, width=40)
         self.total_bruto_vars[tipo_nota] = tk.StringVar(value="0.00")
+        self.valor_bruto_vars[tipo_nota] = tk.StringVar(value="0.00")
         self.crear_entry(referencias_frame, "Total Bruto Factura:", self.total_bruto_vars[tipo_nota], 0, 4, width=15)
+        self.crear_entry(referencias_frame, "Valor Bruto:", self.valor_bruto_vars[tipo_nota], 0, 5, width=15)
 
         concepto_frame = self.crear_labelframe(scrollable_frame, "Concepto De Corrección")
         self.codigo_concepto_vars[tipo_nota] = tk.StringVar()
@@ -369,6 +372,7 @@ class InterfazNotas:
         self.nit_emisor_vars[tipo_nota].set("")
         self.raz_soc_emisor_vars[tipo_nota].set("")
         self.total_bruto_vars[tipo_nota].set("0.00")
+        self.valor_bruto_vars[tipo_nota].set("0.00")
         # Restablecer tipo de operación al valor por defecto
         if tipo_nota == 'credito':
             default_tipo_operacion = "20 - Nota Crédito que referencia una factura electrónica"
@@ -450,6 +454,7 @@ class InterfazNotas:
             "nit_emisor": self.nit_emisor_vars[tipo_nota].get(),
             "razon_social_emisor": self.raz_soc_emisor_vars[tipo_nota].get(),
             "total_bruto": self.total_bruto_vars[tipo_nota].get(),
+            "valor_bruto": self.valor_bruto_vars[tipo_nota].get(),
             "codigo_concepto": codigo_concepto,
             "descripcion_concepto": self.descripcion_texts[tipo_nota].get('1.0', 'end').strip(),
             "valor_base": self.valor_base_vars[tipo_nota].get(),
@@ -513,5 +518,6 @@ class InterfazNotas:
             self.nit_emisor_vars[tipo_nota].set(str(resultado.get('numero_documento', '')))
             self.raz_soc_emisor_vars[tipo_nota].set(str(resultado.get('razon_social', '')))
             self.total_bruto_vars[tipo_nota].set(str(resultado.get('total_factura', '0.00')))
+            self.valor_bruto_vars[tipo_nota].set(str(resultado.get('subtotal_factura', '0.00')))
         else:
             self.mostrar_mensaje('Factura no encontrada') 
