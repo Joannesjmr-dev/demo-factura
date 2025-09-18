@@ -61,6 +61,7 @@ class InterfazNotas:
         # Widgets DateEntry por pestaña
         self.fecha_entry = {}
         self.fecha_emision_entry = {}
+        self.entry_valor_bruto = {}
         main_frame = ttkb.Frame(self.root, padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -176,9 +177,7 @@ class InterfazNotas:
         self.crear_entry(datos_frame, "Número:", self.numero_var[tipo_nota], 0, 0, width=20)
         self.fecha_entry[tipo_nota] = self.crear_date_entry(datos_frame, "Fecha:", 0, 1, width=15, startdate=datetime.now())
         self.valor_bruto_var[tipo_nota] = tk.StringVar(value="0.00")
-        entry_valor_bruto = self.crear_entry(datos_frame, "Valor Bruto:", self.valor_bruto_var[tipo_nota], 0, 2, width=15)
-        entry_valor_bruto.bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
-        entry_valor_bruto.bind('<FocusOut>', lambda e, t=tipo_nota: self.calcular_valores(t))
+        self.entry_valor_bruto[tipo_nota] = self.crear_entry(datos_frame, "Valor Bruto:", self.valor_bruto_var[tipo_nota], 0, 2, width=15)
 
     def _setup_referencias(self, parent, tipo_nota):
         referencias_frame = self.crear_labelframe(parent, "Referencias del documento")
@@ -262,6 +261,8 @@ class InterfazNotas:
         entry_base.bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
         entry_iva.bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
         entry_porcentaje_retencion.bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
+        self.entry_valor_bruto[tipo_nota].bind('<KeyRelease>', lambda e, t=tipo_nota: self.calcular_valores(t))
+        self.entry_valor_bruto[tipo_nota].bind('<FocusOut>', lambda e, t=tipo_nota: self.calcular_valores(t))
 
     def _setup_botones(self, parent, tipo_nota):
         # Frame para los botones
@@ -315,52 +316,6 @@ class InterfazNotas:
         self._setup_concepto(scrollable_frame, tipo_nota)
         self._setup_valores(scrollable_frame, tipo_nota)
         self._setup_botones(parent, tipo_nota)
-    def setup_nota_tab(self, parent, tipo_nota):
-        print(f"Creando widgets en pestaña: {tipo_nota}")
-        # Crear canvas y scrollbar para scroll vertical
-        canvas = tk.Canvas(parent)
-        scrollbar = ttkb.Scrollbar(parent, orient=tk.VERTICAL, command=canvas.yview)
-        scrollable_frame = ttkb.Frame(canvas)
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        self._setup_tipo_operacion(scrollable_frame, tipo_nota)
-        self._setup_datos_basicos(scrollable_frame, tipo_nota)
-        self._setup_referencias(scrollable_frame, tipo_nota)
-        self._setup_concepto(scrollable_frame, tipo_nota)
-        self._setup_valores(scrollable_frame, tipo_nota)
-        self._setup_botones(parent, tipo_nota)
-        if not hasattr(self, 'tipo_operacion_vars'):
-            self.tipo_operacion_vars = {}
-        if tipo_nota == 'credito':
-            tipo_operacion_values = [
-                "20 - Nota Crédito que referencia una factura electrónica",
-                "22 - Nota Crédito sin referencia a facturas"
-            ]
-            default_tipo_operacion = tipo_operacion_values[0]
-        else:
-            tipo_operacion_values = [
-                "30 - Nota Débito que referencia una factura electrónica",
-                "32 - Nota Débito sin referencia a facturas"
-            ]
-            default_tipo_operacion = tipo_operacion_values[0]
-        self.tipo_operacion_vars[tipo_nota] = tk.StringVar(value=default_tipo_operacion)
-        tipo_operacion_frame = self.crear_labelframe(scrollable_frame, "Tipo de Operación")
-        self.crear_combobox(
-            tipo_operacion_frame,
-            "Tipo de Operación:",
-            self.tipo_operacion_vars[tipo_nota],
-            tipo_operacion_values,
-            0, 0, width=50
-        )
         # --- FIN NUEVO ---
 
         datos_frame = self.crear_labelframe(scrollable_frame, "Datos Básicos")
