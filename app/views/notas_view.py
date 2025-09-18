@@ -14,10 +14,10 @@ class InterfazNotas:
         self.controller: Optional[NotasController] = controller
         self.root = ttkb.Window(themename="litera")
         self.root.title("Módulo Notas Crédito y Débito - DIAN")
-        
+
         # Autoajustar al tamaño de la pantalla
         self.autoajustar_ventana()
-        
+
         self.setup_ui()
 
     def autoajustar_ventana(self):
@@ -25,18 +25,18 @@ class InterfazNotas:
         # Obtener las dimensiones de la pantalla
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        
+
         # Calcular el tamaño de la ventana (100% del tamaño de la pantalla)
         window_width = int(screen_width * 1.0)
         window_height = int(screen_height * 1.0)
-        
+
         # Calcular la posición para centrar la ventana
         x_position = (screen_width - window_width) // 2
         y_position = (screen_height - window_height) // 2
-        
+
         # Configurar la geometría de la ventana
         self.root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
-        
+
         # Opcional: hacer que la ventana sea redimensionable
         self.root.resizable(True, True)
 
@@ -47,7 +47,6 @@ class InterfazNotas:
         self.nit_emisor_vars = {}
         self.raz_soc_emisor_vars = {}
         self.total_bruto_vars = {}
-        self.valor_bruto_vars = {}
         # Variables específicas por pestaña
         self.numero_vars = {}
         self.codigo_concepto_vars = {}
@@ -57,6 +56,7 @@ class InterfazNotas:
         self.valor_iva_vars = {}
         self.porcentaje_retencion_vars = {}
         self.retencion_renta_vars = {}
+        self.valor_bruto_vars = {}
         self.valor_total_vars = {}
         # Widgets DateEntry por pestaña
         self.fecha_entries = {}
@@ -397,11 +397,12 @@ class InterfazNotas:
 
     def calcular_valores(self, tipo_nota):
         try:
+            valor_bruto = float(self.valor_bruto_vars[tipo_nota].get() or '0')
             base = float(self.valor_base_vars[tipo_nota].get() or '0')
             porcentaje_iva = float(self.iva_vars[tipo_nota].get() or '0')
             porcentaje_retencion = float(self.porcentaje_retencion_vars[tipo_nota].get() or '0')
             valor_iva = round(base * porcentaje_iva / 100, 2)
-            valor_retencion = round(base * porcentaje_retencion / 100, 2)
+            valor_retencion = round(valor_bruto * porcentaje_retencion / 100, 2)
             total = base + valor_iva - valor_retencion
             self.valor_iva_vars[tipo_nota].set(f"{valor_iva:.2f}")
             self.retencion_renta_vars[tipo_nota].set(f"{valor_retencion:.2f}")
@@ -491,7 +492,7 @@ class InterfazNotas:
         scrollbar = ttkb.Scrollbar(parent, orient=tk.VERTICAL, command=widget.yview)
         widget.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side=side, fill=tk.Y)
-        return scrollbar 
+        return scrollbar
 
     def on_factura_ref_change(self, tipo_nota):
         entry = self.entry_factura_refs[tipo_nota]
@@ -521,4 +522,4 @@ class InterfazNotas:
             self.total_bruto_vars[tipo_nota].set(str(resultado.get('total_factura', '0.00')))
             self.valor_bruto_vars[tipo_nota].set(str(resultado.get('subtotal_factura', '0.00')))
         else:
-            self.mostrar_mensaje('Factura no encontrada') 
+            self.mostrar_mensaje('Factura no encontrada')
