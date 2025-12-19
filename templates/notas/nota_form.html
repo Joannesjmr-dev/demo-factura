@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Crear Nota{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-plus"></i> {% if object %}Editar{% else %}Crear{% endif %} Nota {{ form.instance.get_tipo_display|default:"Crédito" }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="notaForm">
+                    {% csrf_token %}
+
+                    <!-- Tipo de Operación -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de Nota</label>
+                            <select name="tipo" class="form-select" id="id_tipo">
+                                <option value="credito" {% if form.instance.tipo == 'credito' or not form.instance.pk %}selected{% endif %}>Nota Crédito</option>
+                                <option value="debito" {% if form.instance.tipo == 'debito' %}selected{% endif %}>Nota Débito</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.tipo_operacion.label_tag }}
+                            {{ form.tipo_operacion }}
+                        </div>
+                    </div>
+
+                    <!-- Datos Básicos -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            {{ form.numero.label_tag }}
+                            {{ form.numero }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.fecha_emision.label_tag }}
+                            {{ form.fecha_emision }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.hora_emision.label_tag }}
+                            {{ form.hora_emision }}
+                        </div>
+                    </div>
+
+                    <!-- Referencias -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.factura_referencia.label_tag }}
+                            <div class="input-group">
+                                {{ form.factura_referencia }}
+                                <button class="btn btn-outline-secondary" type="button" id="buscarFactura">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.nit_emisor.label_tag }}
+                            {{ form.nit_emisor }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.razon_social_emisor.label_tag }}
+                            {{ form.razon_social_emisor }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.total_bruto.label_tag }}
+                            {{ form.total_bruto }}
+                        </div>
+                    </div>
+
+                    <!-- Concepto -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.codigo_concepto.label_tag }}
+                            {{ form.codigo_concepto }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.descripcion_concepto.label_tag }}
+                            {{ form.descripcion_concepto }}
+                        </div>
+                    </div>
+
+                    <!-- Valores -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            {{ form.valor_base.label_tag }}
+                            {{ form.valor_base }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.porcentaje_iva.label_tag }}
+                            {{ form.porcentaje_iva }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.valor_iva.label_tag }}
+                            {{ form.valor_iva }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.porcentaje_retencion.label_tag }}
+                            {{ form.porcentaje_retencion }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            {{ form.retencion_renta.label_tag }}
+                            {{ form.retencion_renta }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.valor_bruto.label_tag }}
+                            {{ form.valor_bruto }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.valor_total.label_tag }}
+                            {{ form.valor_total }}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'notas:consulta' %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% if object %}Actualizar{% else %}Crear{% endif %} Nota
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('id_tipo');
+    const tipoOperacionSelect = document.getElementById('id_tipo_operacion');
+    const codigoConceptoSelect = document.getElementById('id_codigo_concepto');
+
+    function updateChoices() {
+        const tipo = tipoSelect.value;
+        // Aquí se actualizarían las opciones dinámicamente
+        // Por simplicidad, se mantienen fijas
+    }
+
+    tipoSelect.addEventListener('change', updateChoices);
+
+    // Calcular valores automáticamente
+    const valorBase = document.getElementById('id_valor_base');
+    const porcentajeIva = document.getElementById('id_porcentaje_iva');
+    const valorIva = document.getElementById('id_valor_iva');
+    const porcentajeRetencion = document.getElementById('id_porcentaje_retencion');
+    const retencionRenta = document.getElementById('id_retencion_renta');
+    const valorBruto = document.getElementById('id_valor_bruto');
+    const valorTotal = document.getElementById('id_valor_total');
+
+    function calcularValores() {
+        const base = parseFloat(valorBase.value) || 0;
+        const ivaPct = parseFloat(porcentajeIva.value) || 0;
+        const retPct = parseFloat(porcentajeRetencion.value) || 0;
+        const bruto = parseFloat(valorBruto.value) || 0;
+
+        const iva = base * ivaPct / 100;
+        const retencion = bruto * retPct / 100;
+        const total = bruto + iva - retencion;
+
+        valorIva.value = iva.toFixed(2);
+        retencionRenta.value = retencion.toFixed(2);
+        valorTotal.value = total.toFixed(2);
+    }
+
+    [valorBase, porcentajeIva, porcentajeRetencion, valorBruto].forEach(el => {
+        el.addEventListener('input', calcularValores);
+    });
+
+    // Buscar factura
+    document.getElementById('buscarFactura').addEventListener('click', function() {
+        const numero = document.getElementById('id_factura_referencia').value;
+        if (numero) {
+            fetch(`{% url 'notas:buscar_factura' %}?numero=${numero}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('id_fecha_emision').value = data.fecha_emision;
+                        document.getElementById('id_nit_emisor').value = data.nit_emisor;
+                        document.getElementById('id_razon_social_emisor').value = data.razon_social;
+                        document.getElementById('id_total_bruto').value = data.total_bruto;
+                        document.getElementById('id_valor_bruto').value = data.valor_bruto;
+                        calcularValores();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+        }
+    });
+});
+</script>
+{% endblock %}

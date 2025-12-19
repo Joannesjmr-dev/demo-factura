@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Reportes de Notas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-chart-bar"></i> Reportes de Notas</h4>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="id_tipo" class="form-label">Tipo</label>
+                            <select name="tipo" class="form-select" id="id_tipo">
+                                <option value="" {% if not form.tipo.value %}selected{% endif %}>Todos</option>
+                                <option value="credito" {% if form.tipo.value == 'credito' %}selected{% endif %}>Nota Crédito</option>
+                                <option value="debito" {% if form.tipo.value == 'debito' %}selected{% endif %}>Nota Débito</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="id_fecha_desde" class="form-label">Fecha Desde</label>
+                            <input type="date" name="fecha_desde" class="form-control" id="id_fecha_desde"
+                                   value="{{ form.fecha_desde.value|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="id_fecha_hasta" class="form-label">Fecha Hasta</label>
+                            <input type="date" name="fecha_hasta" class="form-control" id="id_fecha_hasta"
+                                   value="{{ form.fecha_hasta.value|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-file-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="mt-4">
+                    <h5>Instrucciones:</h5>
+                    <ul>
+                        <li>Seleccione el tipo de notas que desea incluir en el reporte (o "Todos" para incluir ambos tipos).</li>
+                        <li>Especifique el rango de fechas para filtrar las notas.</li>
+                        <li>Haga clic en "Exportar Excel" para generar y descargar el reporte.</li>
+                        <li>El archivo se guardará en la carpeta "reportes" del proyecto.</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Nota:</strong> Los reportes incluyen información detallada de cada nota como número, tipo, fechas, valores, conceptos, etc.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
