@@ -16,9 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('notas/', include('notas.urls')),
-    path('', include('notas.urls')),  # Redirigir raíz a notas
+    path('', RedirectView.as_view(url='/notas/')),
 ]
