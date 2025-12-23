@@ -64,6 +64,7 @@ class NotaCreditoDebitoForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        tipo = kwargs.pop('tipo', 'credito')
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
             # Si es edición, ajustar choices según tipo
@@ -74,9 +75,15 @@ class NotaCreditoDebitoForm(forms.ModelForm):
                 self.fields['tipo_operacion'].choices = self.TIPO_OPERACION_CHOICES_DEBITO
                 self.fields['codigo_concepto'].choices = self.CONCEPTO_CHOICES_DEBITO
         else:
-            # Para nueva nota, usar choices de crédito por defecto
-            self.fields['tipo_operacion'].choices = self.TIPO_OPERACION_CHOICES_CREDITO
-            self.fields['codigo_concepto'].choices = self.CONCEPTO_CHOICES_CREDITO
+            # Para nueva nota, ajustar choices según tipo pasado
+            if tipo == 'credito':
+                self.fields['tipo_operacion'].choices = self.TIPO_OPERACION_CHOICES_CREDITO
+                self.fields['codigo_concepto'].choices = self.CONCEPTO_CHOICES_CREDITO
+            else:
+                self.fields['tipo_operacion'].choices = self.TIPO_OPERACION_CHOICES_DEBITO
+                self.fields['codigo_concepto'].choices = self.CONCEPTO_CHOICES_DEBITO
+            # Setear initial para tipo
+            self.fields['tipo'].initial = tipo
 
     def clean_numero(self):
         numero = self.cleaned_data.get('numero')

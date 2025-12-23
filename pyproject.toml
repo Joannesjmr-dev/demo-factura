@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "datetime>=5.5",
+    "django>=6.0",
     "mysql-connector-python>=9.3.0",
     "openpyxl>=3.1.5",
     "pandas",

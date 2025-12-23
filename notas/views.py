@@ -31,6 +31,8 @@ class NotaCreateView(SuccessMessageMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
+        # Setear tipo desde la URL
+        form.instance.tipo = self.request.GET.get('tipo', 'credito')
         # Calcular valores automáticos
         form.instance.valor_iva = (form.instance.valor_base * form.instance.porcentaje_iva) / 100
         form.instance.retencion_renta = (form.instance.valor_bruto * form.instance.porcentaje_retencion) / 100
